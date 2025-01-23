@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 398b67f534f4ca74ba56fdacebd78772, type: 3}
+  m_Name: BubbleManager
+  m_EditorClassIdentifier: 
+  BubbleBulletPrefab: {fileID: 3591685235173780898, guid: a419bdb5e9ffe884fbb856ee9ca79f01, type: 3}
+  BubbleAmmoPrefab: {fileID: -4206799042684908394, guid: 3bbd47f2d7b8b314292933a2c59e788f, type: 3}
+  BubbleObjectPrefab: {fileID: 7722845059904781721, guid: ca03d749efdaa374f9f88a9dad9999a0, type: 3}
+  BubbleColors:
+  - {fileID: 2100000, guid: 22a832a4f9fd43d4b8f6e9e6ddc8d66c, type: 2}
+  - {fileID: 2100000, guid: 8137458f7fd9c8040929f2d44d431c0e, type: 2}
+  - {fileID: 2100000, guid: 09cf11f2915639946a5a67a1c782e1d2, type: 2}
+  - {fileID: 2100000, guid: 5ad1ff89ac6570d49b74da2e4ad7557f, type: 2}
+  - {fileID: 2100000, guid: 39070ae2967e1f446b133d3ff81178eb, type: 2}
