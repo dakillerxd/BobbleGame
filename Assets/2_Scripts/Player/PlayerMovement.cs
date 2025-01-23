@@ -1,4 +1,5 @@
 using UnityEngine;
+using VInspector;
 
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(PlayerCamera))]
@@ -9,10 +10,16 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float runSpeed = 8f;
     [SerializeField] private float jumpForce = 5f;
     [SerializeField] private float gravity = -9.81f;
-    
-    
+
+
+    [Foldout("References")] 
+    [SerializeField] private SOInputReader inputReader;
     private CharacterController _controller;
     private PlayerCamera _playerCamera;
+    [EndFoldout]
+    
+    
+
     private Vector3 _velocity;
     public bool isGrounded {get; private set;}
     public bool isRunning {get; private set;}

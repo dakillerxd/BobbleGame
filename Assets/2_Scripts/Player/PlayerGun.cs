@@ -12,17 +12,19 @@ public class PlayerGun : MonoBehaviour
     [SerializeField] private float shotForce = 10;
     
     
-    [Header("References")]
+    [Foldout("References")]
+    [SerializeField] private SOInputReader inputReader;
     [SerializeField] private TextMeshPro scoreText;
     [SerializeField] private Transform bubbleSpawnPoint;
     [SerializeField] private Transform currentBubbleTransform;
     [SerializeField] private Transform nextBubbleTransform;
     [SerializeField] private SOBubbleManager bubbleManager;
+    [EndFoldout]
 
-    [Space(10)]
+
     private PlayerCamera _playerCamera;
-    [ReadOnly] [ShowInInspector] private BubbleAmmo _currentBubble;
-    [ReadOnly] [ShowInInspector] private BubbleAmmo _nextBubble;
+    private BubbleAmmo _currentBubble;
+    private BubbleAmmo _nextBubble;
     
     
     private void Awake()

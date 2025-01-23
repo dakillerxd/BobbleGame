@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7812ce1aaad883344ac9b59a34591de6, type: 3}
+  m_Name: Transition Test
+  m_EditorClassIdentifier: 
+  duration: 3
+  cycles: 1
+  cycleMode: 0
+  useUnscaledTime: 1
+  useFixedUpdate: 0
+  easeType: 19
+  startTransitionDurationOffset: 3
+  backgroundEffect:
+    enabled: 1
+    durationOffset: -2
+    startColor: {r: 0, g: 0, b: 0, a: 0}
+    endColor: {r: 0, g: 0, b: 0, a: 1}
+  iconEffect:
+    enabled: 1
+    durationOffset: 0
+    sprite: {fileID: 0}
+    startColor: {r: 0, g: 0, b: 0, a: 0}
+    endColor: {r: 1, g: 1, b: 1, a: 1}
+    startScale: 0
+    endScale: 2
+    startRotation: 0
+    endRotation: 720
+  lensDistortEffect:
+    enabled: 0
+    durationOffset: 0
+  chromaticAberrationEffect:
+    enabled: 0
+    durationOffset: 0
+  vignetteEffect:
+    enabled: 0
+    durationOffset: 0
+  colorAdjustEffect:
+    enabled: 0
+    durationOffset: 0
+    startColor: {r: 1, g: 1, b: 1, a: 1}
+    endColor: {r: 0, g: 0, b: 0, a: 1}

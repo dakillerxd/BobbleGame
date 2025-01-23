@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using Unity.Cinemachine;
 using UnityEngine.Serialization;
+using VInspector;
 
 
 [RequireComponent(typeof(PlayerMovement))]
@@ -16,10 +17,12 @@ public class PlayerCamera : MonoBehaviour
     [SerializeField] private float runFovMultiplier = 1.2f;
 
 
-    [Header("References")]
+    [Foldout("References")]
+    [SerializeField] private SOInputReader inputReader;
     [SerializeField] private CinemachineCamera virtualCamera;
     [SerializeField] private CinemachinePanTilt panTilt;
     [SerializeField] private PlayerMovement playerMovement;
+    [EndFoldout]
     
     private void Awake()
     {
