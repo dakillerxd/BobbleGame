@@ -1,13 +1,9 @@
-using System;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
 public class BubbleBullet : BubbleBase
 {
-
     private Rigidbody _rigidbody;
-
-
 
     protected override void Awake()
     {
@@ -17,38 +13,36 @@ public class BubbleBullet : BubbleBase
     
     private void OnCollisionEnter(Collision collision)
     {
-        collision.gameObject.TryGetComponent(out BubbleObject bubble);
+        ContactPoint contact = collision.GetContact(0);
+        float bubbleRadius = bubbleManager.BubbleObjectPrefab.transform.localScale.x / 2f;
+        Vector3 spawnPosition = contact.point + (contact.normal * bubbleRadius);
         
-        if (bubble)
+        TurnIntoBubbleObject(spawnPosition);
+    }
+    
+    private void OnTriggerEnter(Collider other) 
+    {
+        if (other.CompareTag("Water"))
         {
-            if (bubble.BubbleColor() == BubbleColor())
-            {
-                bubble.DestroyBubble();
-                DestroyBubble();
-            }
-            else
-            {
-                BubbleObject bubbleObject = Instantiate(bubbleManager.BubbleObjectPrefab, transform.position, Quaternion.identity);
-                bubbleObject.SetBubbleColor(BubbleColor());
-                Destroy(gameObject);
-            }
-            
-
+            PopBubble();
         }
-        else
-        {
-            
-            BubbleObject bubbleObject = Instantiate(bubbleManager.BubbleObjectPrefab, transform.position, Quaternion.identity);
-            bubbleObject.SetBubbleColor(BubbleColor());
-            Destroy(gameObject);
-        }
-
     }
 
-
+    private void TurnIntoBubbleObject(Vector3 spawnPosition)
+    {
+        BubbleObject bubbleObject = Instantiate(
+            bubbleManager.BubbleObjectPrefab, 
+            spawnPosition, 
+            Quaternion.identity
+        );
+        
+        bubbleObject.SetBubbleColor(BubbleColor());
+        bubbleObject.MarkAsShot();
+        Destroy(gameObject);
+    }
+    
     public void ShootInDirection(Vector3 direction, float force)
     {
         _rigidbody.AddForce(direction * force, ForceMode.Impulse);
     }
-    
 }

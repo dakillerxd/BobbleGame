@@ -1,20 +1,24 @@
-
+using System;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.Serialization;
 using VInspector;
+using PrimeTween;
+
+
 
 [RequireComponent(typeof(PlayerCamera))]
 public class PlayerGun : MonoBehaviour
 {
     [Header("Shooting Settings")] 
+    [SerializeField] private float currentBubbleScale = 0.7f;
+    [SerializeField] private float nextBubbleScale = 0.3f;
     [SerializeField] private float shotForce = 10;
     
     
     [Foldout("References")]
     [SerializeField] private SOInputReader inputReader;
     [SerializeField] private TextMeshPro scoreText;
+    [SerializeField] private TextMeshPro bubblesText;
     [SerializeField] private Transform bubbleSpawnPoint;
     [SerializeField] private Transform currentBubbleTransform;
     [SerializeField] private Transform nextBubbleTransform;
@@ -25,6 +29,8 @@ public class PlayerGun : MonoBehaviour
     private PlayerCamera _playerCamera;
     private BubbleAmmo _currentBubble;
     private BubbleAmmo _nextBubble;
+    private Sequence _updateScoreSequence;
+    private Sequence _updateBubbleSequence;
     
     
     private void Awake()
@@ -59,17 +65,23 @@ public class PlayerGun : MonoBehaviour
         SetCurrentBubble();
     }
 
+    private void OnEnable()
+    {
+        SessionManager.OnScoreUpdate.AddListener(SetScoreText);
+        SessionManager.OnBubbleLeftUpdate.AddListener(SetBubbleText);
+    }
+    
+    private void OnDisable()
+    {
+        SessionManager.OnScoreUpdate.RemoveListener(SetScoreText);
+        SessionManager.OnBubbleLeftUpdate.RemoveListener(SetBubbleText);
+    }
+
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
             ShootBubble();
-        }
-        
-        
-        if (Input.GetKeyDown(KeyCode.F1))
-        {
-            SceneManager.SetActiveScene(SceneManager.GetActiveScene());
         }
     }
 
@@ -86,9 +98,8 @@ public class PlayerGun : MonoBehaviour
 
     private void SetCurrentBubble()
     {
-        BubbleAmmo bubbleAmmo = Instantiate(bubbleManager.BubbleAmmoPrefab, currentBubbleTransform.position, Quaternion.identity, currentBubbleTransform);
-        bubbleAmmo.SetBubbleColor(_nextBubble.BubbleColor());
-        _currentBubble = bubbleAmmo;
+        _currentBubble = Instantiate(bubbleManager.BubbleAmmoPrefab, currentBubbleTransform.position, Quaternion.identity, currentBubbleTransform);
+        _currentBubble.SetBubbleColor(_nextBubble.BubbleColor());
         
         
         ClearNextBubble();
@@ -99,7 +110,6 @@ public class PlayerGun : MonoBehaviour
     {
         _nextBubble = Instantiate(bubbleManager.BubbleAmmoPrefab, nextBubbleTransform.position, Quaternion.identity, nextBubbleTransform);
         _nextBubble.SelectRandomBubbleColor();
-        
     }
 
     private void ClearCurrentBubble()
@@ -123,10 +133,45 @@ public class PlayerGun : MonoBehaviour
     }
 
 
-    private void UpdateScore(int score)
+    private void SetScoreText(int score)
     {
-        scoreText.text = score.ToString();
+        if (!scoreText) return;
+        
+        _updateScoreSequence = Sequence.Create()
+            .Group(Tween.PunchScale(scoreText.transform, strength: scoreText.transform.localScale * 1.5f, duration: 0.5f, frequency: 5f))
+            // .Group(Tween.ShakeLocalPosition(scoreText.transform, strength: new Vector3(scoreText.transform.position.x, 0.02f, 0.02f), duration: 0.5f, frequency: 3f))
+            ;
+        scoreText.text = $"<sketchy>{score}</>";
+
+    }
+
+    private void SetBubbleText(int amount)
+    {
+        if (!bubblesText) return;
+        
+        
+        _updateBubbleSequence = Sequence.Create()
+                .Group(Tween.PunchScale(bubblesText.transform, strength: scoreText.transform.localScale * 1.5f, duration: 0.5f, frequency: 5f))
+            // .Group(Tween.ShakeLocalPosition(bubblesText.transform, strength: new Vector3(scoreText.transform.position.x, 0.02f, 0.02f), duration: 0.5f, frequency: 3f))
+            ;
+        bubblesText.text = $"<sketchy>{amount}</>";
     }
     
+    
 
+#if UNITY_EDITOR
+    
+    private void OnValidate()
+    {
+        if (currentBubbleTransform)
+        {
+            currentBubbleTransform.localScale = new Vector3(currentBubbleScale,currentBubbleScale,currentBubbleScale);
+        }
+        
+        if (nextBubbleTransform)
+        {
+            nextBubbleTransform.localScale = new Vector3(nextBubbleScale,nextBubbleScale,nextBubbleScale);
+        }
+    }
+#endif
 }

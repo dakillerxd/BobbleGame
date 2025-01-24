@@ -61,7 +61,7 @@ public class PlayerMovement : MonoBehaviour
     
         // Check if running
         float targetMoveSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
-        isRunning = Input.GetKey(KeyCode.LeftShift) && isGrounded;
+        isRunning = Input.GetKey(KeyCode.LeftShift);
     
         // Move
         _controller.Move(moveDir * (targetMoveSpeed * Time.deltaTime));

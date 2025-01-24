@@ -16,8 +16,7 @@ MonoBehaviour:
   BubbleAmmoPrefab: {fileID: -4206799042684908394, guid: 3bbd47f2d7b8b314292933a2c59e788f, type: 3}
   BubbleObjectPrefab: {fileID: 7722845059904781721, guid: ca03d749efdaa374f9f88a9dad9999a0, type: 3}
   BubbleColors:
-  - {fileID: 2100000, guid: 22a832a4f9fd43d4b8f6e9e6ddc8d66c, type: 2}
-  - {fileID: 2100000, guid: 8137458f7fd9c8040929f2d44d431c0e, type: 2}
-  - {fileID: 2100000, guid: 09cf11f2915639946a5a67a1c782e1d2, type: 2}
-  - {fileID: 2100000, guid: 5ad1ff89ac6570d49b74da2e4ad7557f, type: 2}
-  - {fileID: 2100000, guid: 39070ae2967e1f446b133d3ff81178eb, type: 2}
+  - {fileID: 2100000, guid: 8063d42ec18490640ab99d8012e68f75, type: 2}
+  - {fileID: 2100000, guid: f6b6cc0d44238c84cb1b99978d458dda, type: 2}
+  - {fileID: 2100000, guid: 980241a5149a7be4bad5f3469096a99a, type: 2}
+  - {fileID: 2100000, guid: 563f37ea9351e7d4392a9b12c4e2db87, type: 2}
