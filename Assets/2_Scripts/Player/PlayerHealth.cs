@@ -1,9 +1,16 @@
 using System;
+using TMPro;
 using UnityEngine;
+using VInspector;
 
-[RequireComponent(typeof(PlayerMovement), typeof(CharacterController))]
+[RequireComponent(typeof(PlayerMovement), typeof(CharacterController), typeof(AudioSource))]
 public class PlayerHealth : MonoBehaviour
 {
+    [Foldout("References")]
+    [SerializeField] private SOAudioEvent deathSfx;
+    [EndFoldout]
+    
+    private AudioSource _audioSource;
     private Vector3 _spawnPoint;
 
     private void Awake()
@@ -26,6 +33,7 @@ public class PlayerHealth : MonoBehaviour
         if (other.CompareTag("Water"))
         {
             MoveToSpawnPoint();
+            deathSfx?.Play(_audioSource);
         }
     }
     

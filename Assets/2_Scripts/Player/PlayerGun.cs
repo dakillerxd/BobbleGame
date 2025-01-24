@@ -5,7 +5,7 @@ using VInspector;
 using PrimeTween;
 using UnityEngine.Serialization;
 
-
+[RequireComponent(typeof(AudioSource))]
 [RequireComponent(typeof(PlayerCamera))]
 public class PlayerGun : MonoBehaviour
 {
@@ -26,10 +26,12 @@ public class PlayerGun : MonoBehaviour
     [SerializeField] private Transform currentBubbleTransform;
     [SerializeField] private Transform nextBubbleTransform;
     [SerializeField] private SOBubbleManager bubbleManager;
+    [SerializeField] private SOAudioEvent gunShotSfx;
     [EndFoldout]
 
 
     private PlayerCamera _playerCamera;
+    private AudioSource _audioSource;
     private BubbleAmmo _currentBubble;
     private BubbleAmmo _nextBubble;
     
@@ -48,6 +50,7 @@ public class PlayerGun : MonoBehaviour
     private void Awake()
     {
         _playerCamera = GetComponent<PlayerCamera>();
+        _audioSource = GetComponent<AudioSource>();
         
         
         // Check transforms
@@ -112,6 +115,7 @@ public class PlayerGun : MonoBehaviour
         bubbleBullet.SetBubbleColor(_currentBubble.BubbleColor());
         bubbleBullet.ShootInDirection(_playerCamera.GetAimDirection(), shotForce);
         _gunShootSequence = GunShootAnimation();
+        gunShotSfx?.Play(_audioSource);
         
         ClearCurrentBubble();
         SetCurrentBubble();
@@ -202,8 +206,8 @@ public class PlayerGun : MonoBehaviour
     {
         
         return Sequence.Create()
-                .Group(Tween.Scale(currentBubbleTransform, startValue: nextBubbleScale, endValue: currentBubbleScale, duration: loadBubbleTime, Ease.OutBack))
                 .Group(Tween.LocalPosition(currentBubbleTransform, startValue: _defaultNextBubbleTransformPosition, endValue: _defaultCurrentBubbleTransformPosition, duration: loadBubbleTime, Ease.OutBack))
+                .Group(Tween.Scale(currentBubbleTransform, startValue: nextBubbleScale /2, endValue: currentBubbleScale, duration: loadBubbleTime * 2, Ease.OutBack))
             ;
     }
     

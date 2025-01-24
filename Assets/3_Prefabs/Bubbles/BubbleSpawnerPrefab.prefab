@@ -44,12 +44,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ffda71cf480bb641ba08f45de2700ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spawnShape: 1
+  spawnShape: 0
   randomizeInShape: 1
-  maxBubbleAmount: 10
-  minBubbleAmount: 3
+  maxBubbleAmount: 5
+  minBubbleAmount: 1
   minDistanceBetweenBubbles: 0.5
-  sameColorSpawnChance: 0.7
+  sameColorSpawnChance: 0.8
   cubeSize: {x: 5, y: 5, z: 5}
   sphereRadius: 3
   ringRadius: 3

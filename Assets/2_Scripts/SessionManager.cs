@@ -49,21 +49,12 @@ public class SessionManager : MonoBehaviour
 
     private void Update()
     {
-        // Debug
-        if (Input.GetKeyDown(KeyCode.F1))
-        {
-            UpdateScore(1);
-        }
         
-        if (Input.GetKeyDown(KeyCode.F2))
+        if (Input.GetKeyDown(KeyCode.F1))
         {
             StartNewSession();
         }
         
-        if (Input.GetKeyDown(KeyCode.F5))
-        {
-            ResetSession();
-        }
         
         
         
@@ -136,8 +127,15 @@ public class SessionManager : MonoBehaviour
         CurrentCombo = 0;
         _comboTimer = 0f;
         _waveTimer = waveTime;
-        FindAllBubblesInLevel();
-        FindAllBubbleSpawners();
+        BubbleSpawners.Clear();
+        BubblesLeft.Clear();
+        BubbleObject[] bubbles = FindObjectsByType<BubbleObject>(FindObjectsSortMode.None);
+        foreach (BubbleObject bubble in bubbles)
+        {
+            Destroy(bubble.gameObject);
+        }
+        
+        
         OnScoreUpdate?.Invoke(CurrentScore);
         OnTimeUpdate?.Invoke(CurrentTime);
         OnWaveUpdate?.Invoke(CurrentWave);
