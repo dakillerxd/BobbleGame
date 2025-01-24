@@ -21,7 +21,7 @@ public class SessionManager : MonoBehaviour
     public static UnityEvent<int> OnBubbleLeftUpdate = new UnityEvent<int>();
     public static UnityEvent<float> OnTimeUpdate = new UnityEvent<float>();
     public static UnityEvent<int> OnWaveUpdate = new UnityEvent<int>();
-    public static UnityEvent OnSessionEnd = new UnityEvent();
+    public static UnityEvent OnSessionStart = new UnityEvent();
 
     [Header("Session Settings")]
     [SerializeField] private int waveTime = 30;
@@ -136,8 +136,8 @@ public class SessionManager : MonoBehaviour
         CurrentCombo = 0;
         _comboTimer = 0f;
         _waveTimer = waveTime;
-        BubblesLeft.Clear();
-        BubbleSpawners.Clear();
+        FindAllBubblesInLevel();
+        FindAllBubbleSpawners();
         OnScoreUpdate?.Invoke(CurrentScore);
         OnTimeUpdate?.Invoke(CurrentTime);
         OnWaveUpdate?.Invoke(CurrentWave);
@@ -158,6 +158,7 @@ public class SessionManager : MonoBehaviour
         }
 
         FindAllBubblesInLevel();
+        OnSessionStart?.Invoke();
     }
 
     private void SpawnNewWave()

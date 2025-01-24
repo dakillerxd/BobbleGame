@@ -44,7 +44,7 @@ Material:
     m_Floats:
     - _Ambient_Occlusion: 1
     - _Depth_Sample_Offset: 0.1
-    - _Foam_Distance: 0.67
+    - _Foam_Distance: 0
     - _Foam_Scale: 100
     - _Metallic: 0
     - _QueueControl: 0

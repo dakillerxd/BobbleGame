@@ -10,7 +10,17 @@ public class PlayerHealth : MonoBehaviour
     {
         _spawnPoint = transform.position;
     }
-    
+
+    private void OnEnable()
+    {
+        SessionManager.OnSessionStart.AddListener(MoveToSpawnPoint);
+    }
+
+    private void OnDisable()
+    {
+        SessionManager.OnSessionStart.RemoveListener(MoveToSpawnPoint);
+    }
+
     private void OnTriggerEnter(Collider other) 
     {
         if (other.CompareTag("Water"))

@@ -10,20 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c2a624d22ac92d244b8b610c87a78af8, type: 3}
-  m_Name: BubblePop
+  m_Name: PlayerDeath
   m_EditorClassIdentifier: 
-  clips:
-  - {fileID: 8300000, guid: 2ec955cf102712c46bb94bcb323647f3, type: 3}
-  - {fileID: 8300000, guid: bc02c3f62ef77d848bfe80543d04b94a, type: 3}
-  - {fileID: 8300000, guid: 6c0e0e5a69f978444954c8bccd0b85bb, type: 3}
-  - {fileID: 8300000, guid: 87ffe4e826410ee4ab1e43a791419cc9, type: 3}
+  clips: []
   mixerGroup: {fileID: 6573020439172944572, guid: 01c289713e2dcb84394f3377bb29e428, type: 2}
   volume:
     minValue: 1
     maxValue: 1
   pitch:
-    minValue: 0.9
-    maxValue: 1.1
+    minValue: 1
+    maxValue: 1
   stereoPan: 0
   spatialBlend: 0
   reverbZoneMix: 1

@@ -34,6 +34,24 @@ public class SOAudioEvent : ScriptableObject
         SetAudioSourceSettings(source);
         source.Play();
     }
+    
+    public void Play()
+    {
+        if (clips.Length == 0) // Make sure there are clips
+        {
+            #if UNITY_EDITOR
+                        Debug.Log("No clips found");
+            #endif
+            return;
+        }
+        
+        AudioSource source = new GameObject("DummyAudioSource").AddComponent<AudioSource>();
+
+        // Set settings to audio source and play
+        SetAudioSourceSettings(source);
+        source.Play();
+        Destroy(source.gameObject, source.clip.length);
+    }
 
     public void PlayDelayed(AudioSource source, float delay)
     {
@@ -78,6 +96,9 @@ public class SOAudioEvent : ScriptableObject
         source.bypassReverbZones = bypassReverbZones;
         source.loop = loop;
     }
+    
+    
+
     
     
 }
