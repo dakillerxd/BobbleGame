@@ -4,6 +4,7 @@ using UnityEngine;
 using VInspector;
 using PrimeTween;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(AudioSource))]
 [RequireComponent(typeof(PlayerCamera))]
@@ -15,12 +16,16 @@ public class PlayerGun : MonoBehaviour
     [SerializeField] private float shotForce = 10;
     [SerializeField] private float loadBubbleTime = 0.7f;
     [SerializeField] private float gunAnimationTime = 0.5f;
+    [SerializeField] private Color comboActiveColor = Color.green;
+    [SerializeField] private Color comboInactiveColor = Color.gray;
     
     
     [Foldout("References")]
     [SerializeField] private SOInputReader inputReader;
     [SerializeField] private TextMeshPro scoreText;
     [SerializeField] private TextMeshPro bubblesText;
+    [SerializeField] private TextMeshPro comboText;
+    [SerializeField] private Image comboBar;
     [SerializeField] private Transform gunTransform;
     [SerializeField] private Transform bubbleSpawnPoint;
     [SerializeField] private Transform currentBubbleTransform;
@@ -34,7 +39,9 @@ public class PlayerGun : MonoBehaviour
     private AudioSource _audioSource;
     private BubbleAmmo _currentBubble;
     private BubbleAmmo _nextBubble;
-    
+    private float _maxComboTime;
+    private float _currentComboTime;
+
     
     // Animations
     private Sequence _updateScoreSequence;
@@ -42,6 +49,7 @@ public class PlayerGun : MonoBehaviour
     private Sequence _loadBubbleSequence;
     private Sequence _loadNextBubbleSequence;
     private Sequence _gunShootSequence;
+    private Sequence _updateComboSequence;
     private Vector3 _defaultCurrentBubbleTransformPosition;
     private Vector3 _defaultNextBubbleTransformPosition;
     private Vector3 _defaultGunTransformPosition;
@@ -74,6 +82,15 @@ public class PlayerGun : MonoBehaviour
             return;
         }
         
+        if (SessionManager.Instance != null)
+        {
+            var gameMode = SessionManager.Instance.GetCurrentGameModeSettings();
+            if (gameMode != null)
+            {
+                _maxComboTime = gameMode.commonSettings.comboTime;
+            }
+        }
+        
         _defaultCurrentBubbleTransformPosition = currentBubbleTransform.localPosition;
         _defaultNextBubbleTransformPosition = nextBubbleTransform.localPosition;
         _defaultGunTransformPosition = gunTransform.localPosition;
@@ -88,6 +105,10 @@ public class PlayerGun : MonoBehaviour
     {
         SessionManager.OnScoreUpdate.AddListener(SetScoreText);
         SessionManager.OnBubbleLeftUpdate.AddListener(SetBubbleText);
+        SessionManager.OnComboUpdate.AddListener(UpdateComboUI);
+        SessionManager.OnGameStateChanged.AddListener(HandleGameStateChanged);
+        SessionManager.OnComboUpdate.RemoveListener(UpdateComboUI);
+        SessionManager.OnGameStateChanged.RemoveListener(HandleGameStateChanged);
     }
     
     private void OnDisable()
@@ -102,7 +123,28 @@ public class PlayerGun : MonoBehaviour
         {
             ShootBubble();
         }
+        
+        if (SessionManager.CurrentCombo > 0 && comboBar != null)
+        {
+            _currentComboTime = Mathf.Max(0, _currentComboTime - Time.deltaTime);
+            UpdateComboBar(_currentComboTime / _maxComboTime);
+        }
     }
+    
+    private void HandleGameStateChanged(GameState newState)
+    {
+        if (newState == GameState.Playing)
+        {
+            // Reset combo UI when game starts
+            UpdateComboUI(0);
+            if (comboBar != null)
+            {
+                comboBar.fillAmount = 0;
+                comboBar.color = comboInactiveColor;
+            }
+        }
+    }
+
 
     
     
@@ -165,7 +207,7 @@ public class PlayerGun : MonoBehaviour
     #endregion Shooting
 
 
-    #region UpdateText
+    #region GunUI
     
     private void SetScoreText(int score)
     {
@@ -190,8 +232,53 @@ public class PlayerGun : MonoBehaviour
             ;
         bubblesText.text = $"<sketchy>{amount}</>";
     }
+    
+    private void UpdateComboUI(int comboCount)
+    {
+        if (comboText == null) return;
 
-    #endregion UpdateText
+        // Reset combo timer when combo updates
+        if (comboCount > 0)
+        {
+            _currentComboTime = _maxComboTime;
+            if (comboBar != null)
+            {
+                comboBar.color = comboActiveColor;
+            }
+        }
+
+        // Animate combo text
+        _updateComboSequence = Sequence.Create()
+            .Group(Tween.PunchScale(comboText.transform, 
+                strength: comboText.transform.localScale * 1.5f, 
+                duration: 0.5f, 
+                frequency: 5f));
+
+        // Update combo text
+        if (comboCount > 0)
+        {
+            comboText.text = $"<sketchy>x{comboCount}</>";
+        }
+        else
+        {
+            comboText.text = "";
+        }
+    }
+
+    private void UpdateComboBar(float fillAmount)
+    {
+        if (comboBar == null) return;
+        
+        comboBar.fillAmount = fillAmount;
+        
+        // Optional: Change color based on time remaining
+        if (fillAmount < 0.3f)
+        {
+            comboBar.color = Color.Lerp(comboInactiveColor, comboActiveColor, fillAmount / 0.3f);
+        }
+    }
+
+    #endregion GunUI
     
     
     #region Animations

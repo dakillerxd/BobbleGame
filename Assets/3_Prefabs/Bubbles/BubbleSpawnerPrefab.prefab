@@ -50,7 +50,7 @@ MonoBehaviour:
   minBubbleAmount: 1
   minDistanceBetweenBubbles: 0.5
   sameColorSpawnChance: 0.8
-  cubeSize: {x: 5, y: 5, z: 5}
+  cubeSize: {x: 15, y: 5, z: 15}
   sphereRadius: 3
   ringRadius: 3
   ringThickness: 0.5

@@ -13,6 +13,14 @@ public class BubbleBullet : BubbleBase
     
     private void OnCollisionEnter(Collision collision)
     {
+        // Check for ground contact
+        if (collision.gameObject.CompareTag("NoBubblesAlowed"))
+        {
+            PopBubble();
+            return;
+        }
+
+        
         ContactPoint contact = collision.GetContact(0);
         float bubbleRadius = bubbleManager.BubbleObjectPrefab.transform.localScale.x / 2f;
         Vector3 spawnPosition = contact.point + (contact.normal * bubbleRadius);

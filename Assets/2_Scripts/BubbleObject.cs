@@ -3,42 +3,72 @@ using System.Linq;
 using UnityEngine;
 using VInspector;
 using PrimeTween;
-using Random = UnityEngine.Random;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(AudioSource))]
 public class BubbleObject : BubbleBase
 {
-    
     [SerializeField] [ReadOnly] private bool wasShot = false;
     [SerializeField] [ReadOnly] private List<BubbleObject> touchingBubbles = new List<BubbleObject>();
     [SerializeField] [ReadOnly] private List<BubbleObject> touchingSameColorBubbles = new List<BubbleObject>();
     private Rigidbody _rigidbody;
-
-
+    
+    // Score settings
+    private int baseScore = 1;
+    private CommonGameSettings commonSettings;
     
     protected override void Awake()
     {
         base.Awake();
         _rigidbody = GetComponent<Rigidbody>();
+        
+        // Register this bubble with the SessionManager
+        if (SessionManager.Instance != null)
+        {
+            SessionManager.BubblesLeft.Add(this);
+            SessionManager.OnBubbleLeftUpdate?.Invoke(SessionManager.BubblesLeft.Count);
+        }
     }
 
     private void Start()
     {
         PlaySpawnEffect();
+        
+        // Get common settings from current game mode
+        if (SessionManager.Instance != null)
+        {
+            var settings = SessionManager.Instance.GetCurrentGameModeSettings();
+            if (settings != null)
+            {
+                commonSettings = settings.commonSettings;
+            }
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // Unregister from SessionManager when destroyed
+        if (SessionManager.Instance != null)
+        {
+            SessionManager.Instance.OnBubblePopped(this);
+        }
     }
 
     private void OnCollisionEnter(Collision collision)
     {
+        // Check for ground contact
+        if (collision.gameObject.CompareTag("NoBubblesAlowed"))
+        {
+            PopBubble();
+            return;
+        }
+        
         if (!collision.gameObject.TryGetComponent(out BubbleObject bubbleObject)) return;
         
         // If the bubble is already in our list, skip
         if (touchingBubbles.Contains(bubbleObject)) return;
             
-        // Add to touching list
         touchingBubbles.Add(bubbleObject);
-        
-        // Update same color bubbles list
         UpdateTouchingSameColorBubbles();
     }
 
@@ -46,13 +76,8 @@ public class BubbleObject : BubbleBase
     {
         if (!collision.gameObject.TryGetComponent(out BubbleObject bubbleObject)) return;
 
-        // Remove from touching list
         touchingBubbles.Remove(bubbleObject);
-        
-        // Update same color bubbles list
         UpdateTouchingSameColorBubbles();
-        
-        // Clean any null references
         CleanLists();
     }
     
@@ -66,10 +91,8 @@ public class BubbleObject : BubbleBase
 
     private void UpdateTouchingSameColorBubbles()
     {
-        // Clear the list and rebuild it
         touchingSameColorBubbles.Clear();
     
-        // Only add bubbles that are actually touching and of the same color
         foreach (BubbleObject bubble in touchingBubbles)
         {
             if (bubble != null && bubble.BubbleColor() == BubbleColor())
@@ -78,37 +101,51 @@ public class BubbleObject : BubbleBase
             }
         }
 
-        // Only proceed with popping if this bubble was shot or is touching a shot bubble
         bool shouldPop = wasShot || touchingSameColorBubbles.Any(bubble => bubble.wasShot);
     
-        // If we have 3 or more same color bubbles (including this one), and should pop, trigger pop
-        if (shouldPop && touchingSameColorBubbles.Count >= 2)  // 2 others + this one = 3 total
+        if (shouldPop && touchingSameColorBubbles.Count >= 2)
         {
-            // Pop all touching same color bubbles
+            float chainBonus = CalculateChainBonus();
+            
+            // Pop connected bubbles and award points
             foreach (BubbleObject bubble in touchingSameColorBubbles)
             {
                 if (bubble != null)
                 {
-                    if (!bubble.wasShot)  // Only update score for non-shot bubbles
+                    if (!bubble.wasShot)
                     {
-                        SessionManager.Instance?.UpdateScore(1);
+                        AwardPoints(chainBonus);
                     }
                     bubble.PopBubble(Random.Range(0, 0.2f));
                 }
             }
         
-            // Pop this bubble and update score if it wasn't shot
+            // Pop this bubble and award points if not shot
             if (!wasShot)
             {
-                SessionManager.Instance?.UpdateScore(1);
+                AwardPoints(chainBonus);
             }
             PopBubble();
         }
     }
-    
 
-    
-    
+    private float CalculateChainBonus()
+    {
+        if (commonSettings == null || !commonSettings.allowCombos)
+            return 1f;
+
+        float comboMultiplier = Mathf.Min(SessionManager.CurrentCombo, commonSettings.maxCombo);
+        return 1f + (comboMultiplier * 0.1f);
+    }
+
+    private void AwardPoints(float chainBonus)
+    {
+        if (SessionManager.Instance == null || commonSettings == null)
+            return;
+
+        int score = Mathf.RoundToInt(baseScore * commonSettings.scoreMultiplier * chainBonus);
+        SessionManager.Instance.UpdateScore(score);
+    }
     
     private void CleanLists()
     {
@@ -120,12 +157,10 @@ public class BubbleObject : BubbleBase
     {
         wasShot = true;
     }
-    
 
     public void SetFrozenState(bool state)
     {
         _rigidbody.constraints = state ? RigidbodyConstraints.FreezeAll : RigidbodyConstraints.None;
         _rigidbody.useGravity = !state;
     }
-    
 }

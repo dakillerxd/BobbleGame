@@ -89,7 +89,15 @@ public class PlayerMovement : MonoBehaviour
         {
             _velocity.y = -2f;
         }
-        
+    }
+    
+    public void SetVelocity(Vector3 newVelocity)
+    {
+        _velocity = newVelocity;
+    }
 
+    public float Gravity()
+    {
+        return gravity;
     }
 }
