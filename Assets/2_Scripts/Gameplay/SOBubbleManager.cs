@@ -9,8 +9,9 @@ public class SOBubbleManager : ScriptableObject
     public BubbleAmmo BubbleAmmoPrefab;
     public BubbleObject BubbleObjectPrefab;
     public Material[] BubbleColors;
+    public Material BubbleNull;
     
-    public Material SelectRandomColor()
+    public Material RandomColor()
     {
         if (BubbleColors.Length <= 0) return null;
         return BubbleColors[Random.Range(0, BubbleColors.Length)];

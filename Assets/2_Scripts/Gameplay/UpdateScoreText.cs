@@ -36,6 +36,9 @@ public class UpdateGameText : MonoBehaviour
         Time,
         Wave,
         GameModeName,
+        Deaths,
+        WaveTimer,
+        WaveScore,
         Custom
     }
     
@@ -45,13 +48,13 @@ public class UpdateGameText : MonoBehaviour
 
     private void Awake()
     {
-        SessionManager.OnGameStateChanged.AddListener(HandleGameStateChange);
+        GameManager.OnGameStateChanged.AddListener(HandleGameStateChange);
     }
 
     private void OnEnable()
     {
         RegisterEventListeners();
-        UpdateGameModeText(); // Update game mode text when enabled
+        UpdateGameModeText();
     }
 
     private void OnDisable()
@@ -67,27 +70,43 @@ public class UpdateGameText : MonoBehaviour
             switch (config.type)
             {
                 case TextType.Score:
-                    SessionManager.OnScoreUpdate.AddListener((score) => 
+                    GameManager.OnScoreUpdate.AddListener((score) => 
                         UpdateText(config, FormatNumber(score, config)));
                     break;
                     
                 case TextType.BubblesLeft:
-                    SessionManager.OnBubbleLeftUpdate.AddListener((bubbles) => 
+                    GameManager.OnBubbleLeftUpdate.AddListener((bubbles) => 
                         UpdateText(config, FormatNumber(bubbles, config)));
                     break;
                     
                 case TextType.Time:
-                    SessionManager.OnTimeUpdate.AddListener((time) => 
+                    GameManager.OnTimeUpdate.AddListener((time) => 
                         UpdateText(config, FormatTime(time, config)));
                     break;
                     
                 case TextType.Wave:
-                    SessionManager.OnWaveUpdate.AddListener((wave) => 
+                    GameManager.OnWaveUpdate.AddListener((wave) => 
                         UpdateText(config, FormatNumber(wave, config)));
                     break;
                     
                 case TextType.GameModeName:
-                    SessionManager.OnSessionStart.AddListener(UpdateGameModeText);
+                    GameManager.OnGameModeChanged.AddListener((gameMode) => 
+                        UpdateText(config, gameMode.ModeName));
+                    break;
+
+                case TextType.Deaths:
+                    GameManager.OnDeathUpdate.AddListener((deaths) =>
+                        UpdateText(config, FormatNumber(deaths, config)));
+                    break;
+
+                case TextType.WaveTimer:
+                    GameManager.OnWaveTimerUpdate.AddListener((timer) =>
+                        UpdateText(config, FormatTime(timer, config)));
+                    break;
+
+                case TextType.WaveScore:
+                    GameManager.OnWaveScoreUpdate.AddListener((waveScore) =>
+                        UpdateText(config, FormatNumber(waveScore, config)));
                     break;
                     
                 case TextType.Custom:
@@ -102,13 +121,13 @@ public class UpdateGameText : MonoBehaviour
 
     private void UpdateGameModeText()
     {
-        if (SessionManager.CurrentGameMode != null)
+        if (GameManager.CurrentGameMode != null)
         {
             foreach (var config in textConfigs)
             {
                 if (config.type == TextType.GameModeName)
                 {
-                    UpdateText(config, SessionManager.CurrentGameMode.ModeName);
+                    UpdateText(config, GameManager.CurrentGameMode.ModeName);
                 }
             }
         }
@@ -116,12 +135,15 @@ public class UpdateGameText : MonoBehaviour
 
     private void UnregisterEventListeners()
     {
-        SessionManager.OnScoreUpdate.RemoveAllListeners();
-        SessionManager.OnBubbleLeftUpdate.RemoveAllListeners();
-        SessionManager.OnTimeUpdate.RemoveAllListeners();
-        SessionManager.OnWaveUpdate.RemoveAllListeners();
-        SessionManager.OnGameStateChanged.RemoveListener(HandleGameStateChange);
-        SessionManager.OnSessionStart.RemoveAllListeners();
+        GameManager.OnScoreUpdate.RemoveAllListeners();
+        GameManager.OnBubbleLeftUpdate.RemoveAllListeners();
+        GameManager.OnTimeUpdate.RemoveAllListeners();
+        GameManager.OnWaveUpdate.RemoveAllListeners();
+        GameManager.OnGameStateChanged.RemoveListener(HandleGameStateChange);
+        GameManager.OnGameModeChanged.RemoveAllListeners();
+        GameManager.OnDeathUpdate.RemoveAllListeners();
+        GameManager.OnWaveTimerUpdate.RemoveAllListeners();
+        GameManager.OnWaveScoreUpdate.RemoveAllListeners();
         customEvents.Clear();
     }
 
@@ -144,16 +166,20 @@ public class UpdateGameText : MonoBehaviour
                 {
                     case TextType.Score:
                     case TextType.Wave:
+                    case TextType.Deaths:
+                    case TextType.WaveScore:
                         UpdateText(config, "0");
                         break;
                     case TextType.BubblesLeft:
                         UpdateText(config, "-");
                         break;
                     case TextType.Time:
-                        if (SessionManager.CurrentGameMode != null)
+                    case TextType.WaveTimer:
+                        if (GameManager.CurrentGameMode != null)
                         {
-                            float initialTime = SessionManager.CurrentGameMode.IsCountUp ? 0 : 
-                                              SessionManager.CurrentGameMode.TargetTime;
+                            float initialTime = config.type == TextType.Time ?
+                                (GameManager.CurrentGameMode.IsCountUp ? 0 : GameManager.CurrentGameMode.TargetTime) :
+                                GameManager.CurrentGameMode.TimeToCompleteWave;
                             UpdateText(config, FormatTime(initialTime, config));
                         }
                         break;
@@ -179,13 +205,11 @@ public class UpdateGameText : MonoBehaviour
             
             if (config.enableAnimation)
             {
-                // Cancel any active animation for this config
                 if (activeAnimations.TryGetValue(config, out var activeSequence))
                 {
                     activeSequence.Complete();
                 }
 
-                // Create new animation
                 var sequence = Sequence.Create()
                     .Group(Tween.PunchScale(
                         text.transform, 
@@ -236,4 +260,42 @@ public class UpdateGameText : MonoBehaviour
             action.Invoke(value);
         }
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        foreach (var config in textConfigs)
+        {
+            if (config.texts == null || config.texts.Length == 0) continue;
+
+            string placeholderText = GetPlaceholderText(config.type);
+            string formattedText = $"{config.prefix}{placeholderText}{config.suffix}";
+
+            foreach (var text in config.texts)
+            {
+                if (text != null)
+                {
+                    text.text = formattedText;
+                }
+            }
+        }
+    }
+
+    private string GetPlaceholderText(TextType type)
+    {
+        return type switch
+        {
+            TextType.Score => "0",
+            TextType.BubblesLeft => "-",
+            TextType.Time => "0:00",
+            TextType.Wave => "0",
+            TextType.GameModeName => "Game Mode",
+            TextType.Deaths => "0",
+            TextType.WaveTimer => "0:00",
+            TextType.WaveScore => "0",
+            TextType.Custom => "Custom Text",
+            _ => "Text"
+        };
+    }
+#endif
 }

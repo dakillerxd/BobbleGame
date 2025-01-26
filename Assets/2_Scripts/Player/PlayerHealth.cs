@@ -20,12 +20,12 @@ public class PlayerHealth : MonoBehaviour
 
     private void OnEnable()
     {
-        SessionManager.OnSessionStart.AddListener(MoveToSpawnPoint);
+        GameManager.OnSessionStart.AddListener(MoveToSpawnPoint);
     }
 
     private void OnDisable()
     {
-        SessionManager.OnSessionStart.RemoveListener(MoveToSpawnPoint);
+        GameManager.OnSessionStart.RemoveListener(MoveToSpawnPoint);
     }
 
     private void OnTriggerEnter(Collider other) 
@@ -33,6 +33,7 @@ public class PlayerHealth : MonoBehaviour
         if (other.CompareTag("Water"))
         {
             MoveToSpawnPoint();
+            GameManager.Instance?.PlayerDied();
             deathSfx?.Play(_audioSource);
         }
     }

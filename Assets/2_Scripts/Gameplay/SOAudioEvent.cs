@@ -25,7 +25,7 @@ public class SOAudioEvent : ScriptableObject
         if (clips.Length == 0) // Make sure there are clips
         {
             #if UNITY_EDITOR
-            Debug.Log("No clips found");
+            // Debug.Log("No clips found");
             #endif
             return;
         }
@@ -40,7 +40,7 @@ public class SOAudioEvent : ScriptableObject
         if (clips.Length == 0) // Make sure there are clips
         {
             #if UNITY_EDITOR
-                        Debug.Log("No clips found");
+            // Debug.Log("No clips found");
             #endif
             return;
         }

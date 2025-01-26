@@ -12,18 +12,17 @@ public class BubbleObject : BubbleBase
     [SerializeField] [ReadOnly] private List<BubbleObject> touchingBubbles = new List<BubbleObject>();
     [SerializeField] [ReadOnly] private List<BubbleObject> touchingSameColorBubbles = new List<BubbleObject>();
     private Rigidbody _rigidbody;
-    private readonly int _baseScore = 1;
     
     protected override void Awake()
     {
         base.Awake();
         _rigidbody = GetComponent<Rigidbody>();
         
-        // Register this bubble with the SessionManager
-        if (SessionManager.Instance != null)
+        // Register this bubble with the GameManager
+        if (GameManager.Instance != null)
         {
-            SessionManager.BubblesLeft.Add(this);
-            SessionManager.OnBubbleLeftUpdate?.Invoke(SessionManager.BubblesLeft.Count);
+            GameManager.BubblesLeft.Add(this);
+            GameManager.OnBubbleLeftUpdate?.Invoke(GameManager.BubblesLeft.Count);
         }
     }
 
@@ -34,10 +33,10 @@ public class BubbleObject : BubbleBase
 
     private void OnDestroy()
     {
-        // Unregister from SessionManager when destroyed
-        if (SessionManager.Instance != null)
+        // Unregister from GameManager when destroyed
+        if (GameManager.Instance != null)
         {
-            SessionManager.Instance.OnBubblePopped(this);
+            GameManager.Instance.OnBubblePopped(this);
         }
     }
 
@@ -116,11 +115,11 @@ public class BubbleObject : BubbleBase
 
     private void AwardPoints()
     {
-        if (SessionManager.Instance == null || SessionManager.CurrentGameMode == null)
+        if (GameManager.Instance == null || GameManager.CurrentGameMode == null)
             return;
 
-        int score = Mathf.RoundToInt(_baseScore * SessionManager.CurrentGameMode.ScoreMultiplier);
-        SessionManager.Instance.UpdateScore(score);
+        int score = Mathf.RoundToInt(GameManager.CurrentGameMode.BubbleScoreWorth * GameManager.CurrentGameMode.ScoreMultiplier);
+        GameManager.Instance.UpdateScore(score);
     }
     
     private void CleanLists()

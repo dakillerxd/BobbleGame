@@ -66,7 +66,7 @@ public class BubbleSpawner : MonoBehaviour
             return;
         }
 
-        if (SessionManager.CurrentGameMode == null)
+        if (GameManager.CurrentGameMode == null)
         {
             Debug.LogError("No active game mode found!");
             return;
@@ -116,8 +116,8 @@ public class BubbleSpawner : MonoBehaviour
     private Vector3[] GenerateConnectedPositions(Vector3[] existingPositions)
     {
         int targetBubbleCount = Random.Range(
-            SessionManager.CurrentGameMode.MinBubbleAmount, 
-            SessionManager.CurrentGameMode.MaxBubbleAmount + 1
+            GameManager.CurrentGameMode.MinBubbleAmount, 
+            GameManager.CurrentGameMode.MaxBubbleAmount + 1
         );
         
         List<Vector3> positions = new List<Vector3>();
@@ -242,7 +242,7 @@ public class BubbleSpawner : MonoBehaviour
     {
         List<Material> availableColors = new List<Material>(bubbleManager.BubbleColors);
 
-        if (Random.value < SessionManager.CurrentGameMode.SameColorSpawnChance)
+        if (Random.value < GameManager.CurrentGameMode.SameColorSpawnChance)
         {
             return availableColors[Random.Range(0, availableColors.Count)];
         }

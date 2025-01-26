@@ -20,3 +20,4 @@ MonoBehaviour:
   - {fileID: 2100000, guid: f6b6cc0d44238c84cb1b99978d458dda, type: 2}
   - {fileID: 2100000, guid: 980241a5149a7be4bad5f3469096a99a, type: 2}
   - {fileID: 2100000, guid: 563f37ea9351e7d4392a9b12c4e2db87, type: 2}
+  BubbleNull: {fileID: 2100000, guid: ca3b1bf82f15e0a418f1907a5b4441c1, type: 2}

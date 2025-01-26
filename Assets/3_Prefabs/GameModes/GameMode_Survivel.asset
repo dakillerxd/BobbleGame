@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1487a3fa427721c4dbcbb00daa816832, type: 3}
+  m_Name: GameMode_Survivel
+  m_EditorClassIdentifier: 
+  modeName: Survivel
+  description: 
+  isCountUp: 1
+  bubbleScoreWorth: 1
+  scoreMultiplier: 1
+  waveInterval: 5
+  enableWaveScaling: 1
+  initialBubblesPerWave: 10
+  bubbleScaling: 1.5
+  maxBubblesPerWave: 20
+  minBubblesPerWave: 5
+  enableSpawnerScaling: 1
+  initialSpawnersPerWave: 1
+  spawnerScaling: 1.2
+  maxSpawnersPerWave: 5
+  minSpawnersPerWave: 1
+  enableTimeBoosts: 0
+  timeBoostAmount: 5
+  scoreRequiredForTimeBoost: 1000
+  spawnerSelectionMode: 1
+  spawnersPerWave: 1
+  allowConsecutiveReuse: 1
+  maxBubbleAmount: 3
+  minBubbleAmount: 1
+  sameColorSpawnChance: 0.6
+  useTimeForWinCondition: 0
+  targetTime: 60
+  enableScoreCondition: 0
+  targetScore: 1000
+  enableWaveCondition: 0
+  targetWave: 10
+  enableWaveClearFailCondition: 1
+  timeToCompleteWave: 30
+  enableMaxDeathsCondition: 1
+  maxDeaths: 3
+  enableMinWaveScoreCondition: 0
+  minScorePerWave: 100
+  enableMaxBubblesCondition: 0
+  maxActiveBubbles: 20
+  useTimeForLoseCondition: 0

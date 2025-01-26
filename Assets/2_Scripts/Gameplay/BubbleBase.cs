@@ -66,7 +66,7 @@ public class BubbleBase : MonoBehaviour
     public void SelectRandomBubbleColor()
     {
         if (!bubbleManager) return;
-        SetBubbleColor(bubbleManager.SelectRandomColor());
+        SetBubbleColor(bubbleManager.RandomColor());
 
     }
     

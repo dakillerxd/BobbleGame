@@ -25,7 +25,7 @@ public class JumpingPad : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.TryGetComponent<PlayerMovement>(out PlayerMovement player))
+        if (other.TryGetComponent(out PlayerMovement player))
         {
             // Calculate the jump velocity using the same formula as the player's jump
             float verticalVelocity = Mathf.Sqrt(jumpForce * -2f * player.Gravity());

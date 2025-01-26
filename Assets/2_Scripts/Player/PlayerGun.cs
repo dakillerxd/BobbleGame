@@ -93,16 +93,14 @@ public class PlayerGun : MonoBehaviour
 
     private void OnEnable()
     {
-        SessionManager.OnScoreUpdate.AddListener(SetScoreText);
-        SessionManager.OnBubbleLeftUpdate.AddListener(SetBubbleText);
-        SessionManager.OnGameStateChanged.AddListener(HandleGameStateChanged);
-        SessionManager.OnGameStateChanged.RemoveListener(HandleGameStateChanged);
+        GameManager.OnScoreUpdate.AddListener(SetScoreText);
+        GameManager.OnBubbleLeftUpdate.AddListener(SetBubbleText);
     }
     
     private void OnDisable()
     {
-        SessionManager.OnScoreUpdate.RemoveListener(SetScoreText);
-        SessionManager.OnBubbleLeftUpdate.RemoveListener(SetBubbleText);
+        GameManager.OnScoreUpdate.RemoveListener(SetScoreText);
+        GameManager.OnBubbleLeftUpdate.RemoveListener(SetBubbleText);
     }
 
     private void Update()
@@ -114,21 +112,18 @@ public class PlayerGun : MonoBehaviour
         
     }
     
-    private void HandleGameStateChanged(GameState newState)
-    {
-    }
 
 
     
     
-    #region Shooting
+#region Shooting // -----------------------------------------------------------------------------------------------------------------
 
     private void ShootBubble()
     {
         if (!_currentBubble) return;
         BubbleBullet bubbleBullet = Instantiate(bubbleManager.BubbleBulletPrefab, bubbleSpawnPoint.position, Quaternion.identity);
         bubbleBullet.SetBubbleColor(_currentBubble.BubbleColor());
-        bubbleBullet.ShootInDirection(_playerMovement.GetAimDirection(), shotForce);
+        bubbleBullet.ShootInDirection(_playerMovement.GetAimDirection(), shotForce, this);
         _gunShootSequence = GunShootAnimation();
         gunShotSfx?.Play(_audioSource);
         
@@ -146,6 +141,13 @@ public class PlayerGun : MonoBehaviour
         
         ClearNextBubble();
         SetNewNextBubble();
+    }
+    
+    public void ForceCurrentBubble(Material bubbleColor)
+    {
+        ClearCurrentBubble();
+        _currentBubble = Instantiate(bubbleManager.BubbleAmmoPrefab, currentBubbleTransform.position, Quaternion.identity, currentBubbleTransform);
+        _currentBubble.SetBubbleColor(bubbleColor);
     }
     
 
@@ -177,10 +179,10 @@ public class PlayerGun : MonoBehaviour
     }
 
 
-    #endregion Shooting
+#endregion Shooting // -----------------------------------------------------------------------------------------------------------------
 
 
-    #region GunUI
+#region GunUI // -----------------------------------------------------------------------------------------------------------------
     
     private void SetScoreText(int score)
     {
@@ -207,10 +209,10 @@ public class PlayerGun : MonoBehaviour
     }
     
 
-    #endregion GunUI
+#endregion GunUI // -----------------------------------------------------------------------------------------------------------------
     
     
-    #region Animations
+#region Animations // -----------------------------------------------------------------------------------------------------------------
     
     private Sequence GunShootAnimation()
     {
@@ -235,7 +237,7 @@ public class PlayerGun : MonoBehaviour
     }
     
 
-    #endregion
+#endregion Animations // -----------------------------------------------------------------------------------------------------------------
     
     
 
