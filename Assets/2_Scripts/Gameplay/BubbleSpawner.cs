@@ -13,7 +13,7 @@ public class BubbleSpawner : MonoBehaviour
 {
     [Foldout("Spawn Settings")] 
     [SerializeField] private SpawnShape spawnShape = SpawnShape.Cube;
-    [SerializeField] private float minDistanceBetweenBubbles = 0.7f;
+    [SerializeField] private float minDistanceBetweenBubbles = 0.5f;
     [SerializeField] private float maxDistanceBetweenBubbles = 1.0f;
     [EndFoldout] 
     
@@ -66,14 +66,11 @@ public class BubbleSpawner : MonoBehaviour
             return;
         }
 
-        GameModeSettings currentSettings = SessionManager.Instance.GetCurrentGameModeSettings();
-        if (currentSettings == null)
+        if (SessionManager.CurrentGameMode == null)
         {
-            Debug.LogError("No active game mode settings found!");
+            Debug.LogError("No active game mode found!");
             return;
         }
-
-        var spawnerSettings = currentSettings.commonSettings.spawnerSettings;
 
         if (clearExisting)
         {
@@ -95,12 +92,12 @@ public class BubbleSpawner : MonoBehaviour
             }
         }
 
-        Vector3[] positions = GenerateConnectedPositions(GetExistingBubblePositions(), spawnerSettings);
+        Vector3[] positions = GenerateConnectedPositions(GetExistingBubblePositions());
         List<(Vector3 position, Material color)> newBubbleData = new List<(Vector3, Material)>();
 
         foreach (Vector3 position in positions)
         {
-            Material validColor = GetValidColor(position, newBubbleData, spawnerSettings.sameColorSpawnChance);
+            Material validColor = GetValidColor(position, newBubbleData);
             
             BubbleObject bubble = Instantiate(
                 bubbleManager.BubbleObjectPrefab,
@@ -114,11 +111,15 @@ public class BubbleSpawner : MonoBehaviour
             newBubbleData.Add((position, validColor));
         }
     }
-
-    private Vector3[] GenerateConnectedPositions(Vector3[] existingPositions, SpawnerSettings settings)
+    
+    
+    private Vector3[] GenerateConnectedPositions(Vector3[] existingPositions)
     {
-        // Changed from settings.minBubbleAmount to settings.maxBubbleAmount
-        int targetBubbleCount = Random.Range(settings.minBubbleAmount, settings.maxBubbleAmount + 1);
+        int targetBubbleCount = Random.Range(
+            SessionManager.CurrentGameMode.MinBubbleAmount, 
+            SessionManager.CurrentGameMode.MaxBubbleAmount + 1
+        );
+        
         List<Vector3> positions = new List<Vector3>();
     
         if (existingPositions != null && existingPositions.Length > 0)
@@ -237,12 +238,11 @@ public class BubbleSpawner : MonoBehaviour
         }
     }
 
-    private Material GetValidColor(Vector3 position, List<(Vector3 position, Material color)> newBubbles,
-        float sameColorSpawnChance)
+    private Material GetValidColor(Vector3 position, List<(Vector3 position, Material color)> newBubbles)
     {
         List<Material> availableColors = new List<Material>(bubbleManager.BubbleColors);
 
-        if (Random.value < sameColorSpawnChance)
+        if (Random.value < SessionManager.CurrentGameMode.SameColorSpawnChance)
         {
             return availableColors[Random.Range(0, availableColors.Count)];
         }

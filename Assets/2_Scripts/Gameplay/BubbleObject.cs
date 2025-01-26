@@ -12,10 +12,7 @@ public class BubbleObject : BubbleBase
     [SerializeField] [ReadOnly] private List<BubbleObject> touchingBubbles = new List<BubbleObject>();
     [SerializeField] [ReadOnly] private List<BubbleObject> touchingSameColorBubbles = new List<BubbleObject>();
     private Rigidbody _rigidbody;
-    
-    // Score settings
-    private int baseScore = 1;
-    private CommonGameSettings commonSettings;
+    private readonly int _baseScore = 1;
     
     protected override void Awake()
     {
@@ -33,16 +30,6 @@ public class BubbleObject : BubbleBase
     private void Start()
     {
         PlaySpawnEffect();
-        
-        // Get common settings from current game mode
-        if (SessionManager.Instance != null)
-        {
-            var settings = SessionManager.Instance.GetCurrentGameModeSettings();
-            if (settings != null)
-            {
-                commonSettings = settings.commonSettings;
-            }
-        }
     }
 
     private void OnDestroy()
@@ -105,8 +92,6 @@ public class BubbleObject : BubbleBase
     
         if (shouldPop && touchingSameColorBubbles.Count >= 2)
         {
-            float chainBonus = CalculateChainBonus();
-            
             // Pop connected bubbles and award points
             foreach (BubbleObject bubble in touchingSameColorBubbles)
             {
@@ -114,7 +99,7 @@ public class BubbleObject : BubbleBase
                 {
                     if (!bubble.wasShot)
                     {
-                        AwardPoints(chainBonus);
+                        AwardPoints();
                     }
                     bubble.PopBubble(Random.Range(0, 0.2f));
                 }
@@ -123,27 +108,18 @@ public class BubbleObject : BubbleBase
             // Pop this bubble and award points if not shot
             if (!wasShot)
             {
-                AwardPoints(chainBonus);
+                AwardPoints();
             }
             PopBubble();
         }
     }
 
-    private float CalculateChainBonus()
+    private void AwardPoints()
     {
-        if (commonSettings == null || !commonSettings.allowCombos)
-            return 1f;
-
-        float comboMultiplier = Mathf.Min(SessionManager.CurrentCombo, commonSettings.maxCombo);
-        return 1f + (comboMultiplier * 0.1f);
-    }
-
-    private void AwardPoints(float chainBonus)
-    {
-        if (SessionManager.Instance == null || commonSettings == null)
+        if (SessionManager.Instance == null || SessionManager.CurrentGameMode == null)
             return;
 
-        int score = Mathf.RoundToInt(baseScore * commonSettings.scoreMultiplier * chainBonus);
+        int score = Mathf.RoundToInt(_baseScore * SessionManager.CurrentGameMode.ScoreMultiplier);
         SessionManager.Instance.UpdateScore(score);
     }
     

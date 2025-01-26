@@ -403,7 +403,7 @@ GameObject:
   m_Component:
   - component: {fileID: 151892687419654636}
   m_Layer: 0
-  m_Name: ScoreScreenSmall
+  m_Name: TextScreenSmall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

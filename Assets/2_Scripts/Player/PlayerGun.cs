@@ -7,15 +7,15 @@ using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(AudioSource))]
-[RequireComponent(typeof(PlayerCamera))]
+[RequireComponent(typeof(PlayerMovement))]
 public class PlayerGun : MonoBehaviour
 {
     [Header("Gun Settings")] 
-    [SerializeField] private float currentBubbleScale = 0.7f;
-    [SerializeField] private float nextBubbleScale = 0.3f;
-    [SerializeField] private float shotForce = 10;
+    [SerializeField] private float currentBubbleScale = 0.6f;
+    [SerializeField] private float nextBubbleScale = 0.2f;
+    [SerializeField] private float shotForce = 15;
     [SerializeField] private float loadBubbleTime = 0.7f;
-    [SerializeField] private float gunAnimationTime = 0.5f;
+    [SerializeField] private float gunAnimationTime = 0.3f;
     [SerializeField] private Color comboActiveColor = Color.green;
     [SerializeField] private Color comboInactiveColor = Color.gray;
     
@@ -35,12 +35,10 @@ public class PlayerGun : MonoBehaviour
     [EndFoldout]
 
 
-    private PlayerCamera _playerCamera;
+    private PlayerMovement _playerMovement;
     private AudioSource _audioSource;
     private BubbleAmmo _currentBubble;
     private BubbleAmmo _nextBubble;
-    private float _maxComboTime;
-    private float _currentComboTime;
 
     
     // Animations
@@ -57,7 +55,7 @@ public class PlayerGun : MonoBehaviour
     
     private void Awake()
     {
-        _playerCamera = GetComponent<PlayerCamera>();
+        _playerMovement = GetComponent<PlayerMovement>();
         _audioSource = GetComponent<AudioSource>();
         
         
@@ -82,14 +80,6 @@ public class PlayerGun : MonoBehaviour
             return;
         }
         
-        if (SessionManager.Instance != null)
-        {
-            var gameMode = SessionManager.Instance.GetCurrentGameModeSettings();
-            if (gameMode != null)
-            {
-                _maxComboTime = gameMode.commonSettings.comboTime;
-            }
-        }
         
         _defaultCurrentBubbleTransformPosition = currentBubbleTransform.localPosition;
         _defaultNextBubbleTransformPosition = nextBubbleTransform.localPosition;
@@ -105,9 +95,7 @@ public class PlayerGun : MonoBehaviour
     {
         SessionManager.OnScoreUpdate.AddListener(SetScoreText);
         SessionManager.OnBubbleLeftUpdate.AddListener(SetBubbleText);
-        SessionManager.OnComboUpdate.AddListener(UpdateComboUI);
         SessionManager.OnGameStateChanged.AddListener(HandleGameStateChanged);
-        SessionManager.OnComboUpdate.RemoveListener(UpdateComboUI);
         SessionManager.OnGameStateChanged.RemoveListener(HandleGameStateChanged);
     }
     
@@ -124,25 +112,10 @@ public class PlayerGun : MonoBehaviour
             ShootBubble();
         }
         
-        if (SessionManager.CurrentCombo > 0 && comboBar != null)
-        {
-            _currentComboTime = Mathf.Max(0, _currentComboTime - Time.deltaTime);
-            UpdateComboBar(_currentComboTime / _maxComboTime);
-        }
     }
     
     private void HandleGameStateChanged(GameState newState)
     {
-        if (newState == GameState.Playing)
-        {
-            // Reset combo UI when game starts
-            UpdateComboUI(0);
-            if (comboBar != null)
-            {
-                comboBar.fillAmount = 0;
-                comboBar.color = comboInactiveColor;
-            }
-        }
     }
 
 
@@ -155,7 +128,7 @@ public class PlayerGun : MonoBehaviour
         if (!_currentBubble) return;
         BubbleBullet bubbleBullet = Instantiate(bubbleManager.BubbleBulletPrefab, bubbleSpawnPoint.position, Quaternion.identity);
         bubbleBullet.SetBubbleColor(_currentBubble.BubbleColor());
-        bubbleBullet.ShootInDirection(_playerCamera.GetAimDirection(), shotForce);
+        bubbleBullet.ShootInDirection(_playerMovement.GetAimDirection(), shotForce);
         _gunShootSequence = GunShootAnimation();
         gunShotSfx?.Play(_audioSource);
         
@@ -233,50 +206,6 @@ public class PlayerGun : MonoBehaviour
         bubblesText.text = $"<sketchy>{amount}</>";
     }
     
-    private void UpdateComboUI(int comboCount)
-    {
-        if (comboText == null) return;
-
-        // Reset combo timer when combo updates
-        if (comboCount > 0)
-        {
-            _currentComboTime = _maxComboTime;
-            if (comboBar != null)
-            {
-                comboBar.color = comboActiveColor;
-            }
-        }
-
-        // Animate combo text
-        _updateComboSequence = Sequence.Create()
-            .Group(Tween.PunchScale(comboText.transform, 
-                strength: comboText.transform.localScale * 1.5f, 
-                duration: 0.5f, 
-                frequency: 5f));
-
-        // Update combo text
-        if (comboCount > 0)
-        {
-            comboText.text = $"<sketchy>x{comboCount}</>";
-        }
-        else
-        {
-            comboText.text = "";
-        }
-    }
-
-    private void UpdateComboBar(float fillAmount)
-    {
-        if (comboBar == null) return;
-        
-        comboBar.fillAmount = fillAmount;
-        
-        // Optional: Change color based on time remaining
-        if (fillAmount < 0.3f)
-        {
-            comboBar.color = Color.Lerp(comboInactiveColor, comboActiveColor, fillAmount / 0.3f);
-        }
-    }
 
     #endregion GunUI
     

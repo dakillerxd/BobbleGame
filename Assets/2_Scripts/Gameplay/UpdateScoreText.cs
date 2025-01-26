@@ -35,7 +35,7 @@ public class UpdateGameText : MonoBehaviour
         BubblesLeft,
         Time,
         Wave,
-        Combo,
+        GameModeName,
         Custom
     }
     
@@ -45,13 +45,13 @@ public class UpdateGameText : MonoBehaviour
 
     private void Awake()
     {
-        // Register for game state changes
         SessionManager.OnGameStateChanged.AddListener(HandleGameStateChange);
     }
 
     private void OnEnable()
     {
         RegisterEventListeners();
+        UpdateGameModeText(); // Update game mode text when enabled
     }
 
     private void OnDisable()
@@ -86,18 +86,8 @@ public class UpdateGameText : MonoBehaviour
                         UpdateText(config, FormatNumber(wave, config)));
                     break;
                     
-                case TextType.Combo:
-                    SessionManager.OnComboUpdate.AddListener((combo) => 
-                    {
-                        if (combo > 0) // Only show combo when it's active
-                        {
-                            UpdateText(config, FormatNumber(combo, config));
-                        }
-                        else
-                        {
-                            UpdateText(config, "");
-                        }
-                    });
+                case TextType.GameModeName:
+                    SessionManager.OnSessionStart.AddListener(UpdateGameModeText);
                     break;
                     
                 case TextType.Custom:
@@ -110,14 +100,28 @@ public class UpdateGameText : MonoBehaviour
         }
     }
 
+    private void UpdateGameModeText()
+    {
+        if (SessionManager.CurrentGameMode != null)
+        {
+            foreach (var config in textConfigs)
+            {
+                if (config.type == TextType.GameModeName)
+                {
+                    UpdateText(config, SessionManager.CurrentGameMode.ModeName);
+                }
+            }
+        }
+    }
+
     private void UnregisterEventListeners()
     {
         SessionManager.OnScoreUpdate.RemoveAllListeners();
         SessionManager.OnBubbleLeftUpdate.RemoveAllListeners();
         SessionManager.OnTimeUpdate.RemoveAllListeners();
         SessionManager.OnWaveUpdate.RemoveAllListeners();
-        SessionManager.OnComboUpdate.RemoveAllListeners();
         SessionManager.OnGameStateChanged.RemoveListener(HandleGameStateChange);
+        SessionManager.OnSessionStart.RemoveAllListeners();
         customEvents.Clear();
     }
 
@@ -134,25 +138,27 @@ public class UpdateGameText : MonoBehaviour
     {
         if (newState == GameState.WaitingToStart)
         {
-            // Reset all text displays when game is reset
             foreach (var config in textConfigs)
             {
                 switch (config.type)
                 {
                     case TextType.Score:
                     case TextType.Wave:
-                    case TextType.Combo:
                         UpdateText(config, "0");
                         break;
                     case TextType.BubblesLeft:
                         UpdateText(config, "-");
                         break;
                     case TextType.Time:
-                        var settings = SessionManager.Instance?.GetCurrentGameModeSettings();
-                        if (settings != null)
+                        if (SessionManager.CurrentGameMode != null)
                         {
-                            UpdateText(config, FormatTime(settings.commonSettings.baseTime, config));
+                            float initialTime = SessionManager.CurrentGameMode.IsCountUp ? 0 : 
+                                              SessionManager.CurrentGameMode.TargetTime;
+                            UpdateText(config, FormatTime(initialTime, config));
                         }
+                        break;
+                    case TextType.GameModeName:
+                        UpdateGameModeText();
                         break;
                 }
             }
