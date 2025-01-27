@@ -1,79 +1,83 @@
 
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Serialization;
+using VInspector;
 
 public class BubbleSetter : MonoBehaviour
 {
     [Header("Settings")]
-    [SerializeField] private Material bubbleColor;
     [SerializeField] private float cooldownTime = 5;
     [SerializeField] private bool randomizeBubbleColor = false;
+    [HideIf("randomizeBubbleColor")][SerializeField] private Material bubbleColor;[EndIf]
     
     [Header("References")] 
     [SerializeField] private SOBubbleManager bubbleManager;
-    [SerializeField] private MeshRenderer meshRenderer;
+    [SerializeField] private Transform bubbleHolderTransform;
+    [SerializeField] private Collider collider3D;
+    
+    
 
+    private BubbleBase _currentBubble;
     private bool _triggered;
 
     private void Awake()
     {
-        if (!meshRenderer) meshRenderer = GetComponent<MeshRenderer>();
-            
-        if (!bubbleManager)
+        
+        if (!bubbleManager || !collider3D || !bubbleHolderTransform)
         {
-            Debug.LogError($"BubbleManager is null");
+            Debug.LogError($"References are missing!");
             return;
         }
+
+        SetCurrentBubble();
+    }
+    
+    public void SetPlayerBubbleColor(PlayerGun player)
+    {
+        if (!_currentBubble || _triggered) return;
         
-        if (randomizeBubbleColor || !bubbleColor) SetBubbleColor();
+        _triggered = true;
+        collider3D.enabled = false;
+        player.ForceCurrentBubble(_currentBubble.BubbleColor());
+        _currentBubble.PopBubble();
+        StartCoroutine(StartCooldown());
+        
     }
     
     
     private IEnumerator StartCooldown()
     {
-        _triggered = true;
-        SetBubbleColorBase();
         yield return new WaitForSeconds(cooldownTime);
         _triggered = false;
-        SetBubbleColor();
-    }
-
-    private void SetBubbleColor()
-    {
-        meshRenderer.enabled = true;
-        
-        if (!randomizeBubbleColor)
-        {
-            meshRenderer.material = bubbleColor;
-        }
-        else
-        {
-            bubbleColor = bubbleManager.RandomColor();
-            meshRenderer.material = bubbleColor;
-        }
-    }
-
-    private void SetBubbleColorBase()
-    {
-        meshRenderer.enabled = false;
+        SetCurrentBubble();
     }
     
-    public void SetPlayerBubbleColor(PlayerGun player)
+    private void ClearCurrentBubble()
     {
-        if (!bubbleColor || _triggered) return;
-        
-        player.ForceCurrentBubble(bubbleColor);
-        StartCoroutine(StartCooldown());
+        _currentBubble = null;
+        foreach (Transform child in bubbleHolderTransform)
+        {
+            Destroy(child.gameObject);
+        }
     }
+
+    private void SetCurrentBubble()
+    {
+        ClearCurrentBubble();
+        _currentBubble = Instantiate(bubbleManager.BubbleBasePrefab, bubbleHolderTransform.position, Quaternion.identity, bubbleHolderTransform);
+        _currentBubble.SetBubbleColor(randomizeBubbleColor ? bubbleManager.RandomColor() : bubbleColor);
+        collider3D.enabled = true;
+    }
+    
+    
 
 #if UNITY_EDITOR
     
     private void OnValidate()
     {
-        if (meshRenderer || !bubbleColor)
-        {
-            SetBubbleColor();
-        }
+
+
     }
 #endif
     

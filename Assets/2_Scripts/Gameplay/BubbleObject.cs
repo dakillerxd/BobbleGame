@@ -11,6 +11,7 @@ public class BubbleObject : BubbleBase
     [SerializeField] [ReadOnly] private bool wasShot = false;
     [SerializeField] [ReadOnly] private List<BubbleObject> touchingBubbles = new List<BubbleObject>();
     [SerializeField] [ReadOnly] private List<BubbleObject> touchingSameColorBubbles = new List<BubbleObject>();
+    
     private Rigidbody _rigidbody;
     
     protected override void Awake()
@@ -40,32 +41,18 @@ public class BubbleObject : BubbleBase
         }
     }
 
-    private void OnCollisionEnter(Collision collision)
+    private void OnCollisionEnter(Collision other)
     {
         // Check for ground contact
-        if (collision.gameObject.CompareTag("NoBubblesAlowed"))
+        if (other.gameObject.CompareTag("NoBubblesAlowed"))
         {
             PopBubble();
             return;
         }
-        
-        if (!collision.gameObject.TryGetComponent(out BubbleObject bubbleObject)) return;
-        
-        // If the bubble is already in our list, skip
-        if (touchingBubbles.Contains(bubbleObject)) return;
-            
-        touchingBubbles.Add(bubbleObject);
-        UpdateTouchingSameColorBubbles();
     }
+    
 
-    private void OnCollisionExit(Collision collision)
-    {
-        if (!collision.gameObject.TryGetComponent(out BubbleObject bubbleObject)) return;
 
-        touchingBubbles.Remove(bubbleObject);
-        UpdateTouchingSameColorBubbles();
-        CleanLists();
-    }
     
     private void OnTriggerEnter(Collider other) 
     {
@@ -73,7 +60,28 @@ public class BubbleObject : BubbleBase
         {
             PopBubble();
         }
+        
+        if (other.TryGetComponent(out BubbleObject bubbleObject))
+        {
+            // If the bubble is already in our list, skip
+            if (touchingBubbles.Contains(bubbleObject)) return;
+            
+            touchingBubbles.Add(bubbleObject);
+            UpdateTouchingSameColorBubbles();
+        }
     }
+    
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.TryGetComponent(out BubbleObject bubbleObject))
+        {
+            touchingBubbles.Remove(bubbleObject);
+            UpdateTouchingSameColorBubbles();
+            CleanLists();
+        }
+    }
+    
+    
 
     private void UpdateTouchingSameColorBubbles()
     {
@@ -109,18 +117,26 @@ public class BubbleObject : BubbleBase
             {
                 AwardPoints();
             }
+
+            // Notify the player gun about popped bubbles
+            if (PlayerGun != null)
+            {
+                PlayerGun.OnBubblesPopped(touchingSameColorBubbles.Count + 1);
+            }
+
             PopBubble();
         }
     }
-
+    
+    
     private void AwardPoints()
     {
-        if (GameManager.Instance == null || GameManager.CurrentGameMode == null)
-            return;
+        if (GameManager.Instance == null || GameManager.CurrentGameMode == null) return;
 
         int score = Mathf.RoundToInt(GameManager.CurrentGameMode.BubbleScoreWorth * GameManager.CurrentGameMode.ScoreMultiplier);
         GameManager.Instance.UpdateScore(score);
     }
+    
     
     private void CleanLists()
     {
@@ -138,4 +154,6 @@ public class BubbleObject : BubbleBase
         _rigidbody.constraints = state ? RigidbodyConstraints.FreezeAll : RigidbodyConstraints.None;
         _rigidbody.useGravity = !state;
     }
+    
+
 }

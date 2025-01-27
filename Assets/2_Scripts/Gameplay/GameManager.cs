@@ -60,15 +60,11 @@ public class GameManager : MonoBehaviour
             SetGameMode(defaultSoGameMode);
         }
     }
-
-    private void Start()
-    {
-        StartNewSession();
-    }
+    
     
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.F1) && CurrentGameState != GameState.Playing)
+        if (Input.GetKeyDown(KeyCode.F1))
         {
             StartNewSession();
         }
@@ -271,6 +267,7 @@ public class GameManager : MonoBehaviour
     
 #endregion Session Management // -------------------------------------------------------------------------------------
 
+
 #region Bubble Management // -------------------------------------------------------------------------------------
     
     private void FindAllBubblesInLevel()
@@ -290,6 +287,7 @@ public class GameManager : MonoBehaviour
 
     public void OnBubblePopped(BubbleObject bubble)
     {
+        
         if (CurrentGameState != GameState.Playing) return;
             
         BubblesLeft.Remove(bubble);

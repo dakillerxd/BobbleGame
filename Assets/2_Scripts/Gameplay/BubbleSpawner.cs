@@ -9,6 +9,7 @@ public enum SpawnShape
     Sphere
 }
 
+[RequireComponent(typeof(AudioSource))]
 public class BubbleSpawner : MonoBehaviour
 {
     [Foldout("Spawn Settings")] 
@@ -27,6 +28,8 @@ public class BubbleSpawner : MonoBehaviour
 
     [Foldout("References")] 
     [SerializeField] private SOBubbleManager bubbleManager;
+    [SerializeField] private SOAudioEvent bubblesSpawnedSfx;
+    [SerializeField] private  AudioSource audioSource;
     [EndFoldout] 
     
     [SerializeField] [ReadOnly] private List<BubbleObject> spawnedBubbles = new List<BubbleObject>();
@@ -110,6 +113,7 @@ public class BubbleSpawner : MonoBehaviour
             spawnedBubbles.Add(bubble);
             newBubbleData.Add((position, validColor));
         }
+        bubblesSpawnedSfx.Play(audioSource);
     }
     
     

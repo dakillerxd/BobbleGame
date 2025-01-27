@@ -10,14 +10,26 @@ using UnityEngine.UI;
 [RequireComponent(typeof(PlayerMovement))]
 public class PlayerGun : MonoBehaviour
 {
-    [Header("Gun Settings")] 
+    [Header("Settings")] 
     [SerializeField] private float currentBubbleScale = 0.6f;
     [SerializeField] private float nextBubbleScale = 0.2f;
     [SerializeField] private float shotForce = 15;
     [SerializeField] private float loadBubbleTime = 0.7f;
     [SerializeField] private float gunAnimationTime = 0.3f;
+
+    
+    [Header("Combo Settings")] 
+    [Tooltip("Time in seconds before the combo resets")]
+    [SerializeField] private float comboTimeWindow = 7f;
+    [Tooltip("Maximum combo multiplier that can be achieved")]
+    [SerializeField] private int maxCombo = 10;
+    [Tooltip("How quickly the combo bar visual depletes\n >1 make the bar drain more quickly/sharply\n <1 make the bar drain more smoothly/gradually\n 1 means the bar drains at the same rate as the timer")]
+    [SerializeField] private float comboBarDrainSpeed = 1f;
     [SerializeField] private Color comboActiveColor = Color.green;
     [SerializeField] private Color comboInactiveColor = Color.gray;
+    [SerializeField] private float basePulseRadius = 3f;
+    [SerializeField] private float radiusPerCombo = 0.5f;
+    [SerializeField] private float pulseEffectDuration = 0.5f;
     
     
     [Foldout("References")]
@@ -31,6 +43,7 @@ public class PlayerGun : MonoBehaviour
     [SerializeField] private Transform currentBubbleTransform;
     [SerializeField] private Transform nextBubbleTransform;
     [SerializeField] private SOBubbleManager bubbleManager;
+    [SerializeField] private PlayerGunPulseEffect pulseEffectPrefab;
     [SerializeField] private SOAudioEvent gunShotSfx;
     [EndFoldout]
 
@@ -39,6 +52,10 @@ public class PlayerGun : MonoBehaviour
     private AudioSource _audioSource;
     private BubbleAmmo _currentBubble;
     private BubbleAmmo _nextBubble;
+    private int _currentCombo;
+    private float _comboTimeLeft;
+    private bool _isComboActive;
+
 
     
     // Animations
@@ -105,14 +122,27 @@ public class PlayerGun : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Mouse0))
+        if (Input.GetKeyDown(KeyCode.Mouse0)) // Shooting
         {
             ShootBubble();
         }
         
+        if (Input.GetKeyDown(KeyCode.Mouse1)) // Bubble pulse
+        {
+            TriggerPulseEffect();
+        }
+
+        UpdateCombo();
     }
     
 
+    public void OnBubblesPopped(int amount)
+    {
+        if (amount >= 3)  // Only increment combo for 3+ bubble pops
+        {
+            IncrementCombo();
+        }
+    }
 
     
     
@@ -177,6 +207,78 @@ public class PlayerGun : MonoBehaviour
             Destroy(child.gameObject);
         }
     }
+    
+    private void UpdateCombo()
+    {
+        if (!_isComboActive) return;
+    
+        _comboTimeLeft -= Time.deltaTime;
+        float normalizedTime = (_comboTimeLeft / comboTimeWindow);
+        // Apply the drain speed modifier
+        comboBar.fillAmount = Mathf.Lerp(comboBar.fillAmount, normalizedTime, Time.deltaTime * comboBarDrainSpeed);
+    
+        if (_comboTimeLeft <= 0)
+        {
+            ResetCombo();
+        }
+    }
+
+    private void IncrementCombo()
+    {
+        _currentCombo = Mathf.Min(_currentCombo + 1, maxCombo);
+        _comboTimeLeft = comboTimeWindow;
+        _isComboActive = true;
+    
+        UpdateComboUI();
+    }
+
+    private void ResetCombo()
+    {
+        _currentCombo = 0;
+        _comboTimeLeft = 0;
+        _isComboActive = false;
+        comboBar.fillAmount = 0;
+    
+        UpdateComboUI();
+    }
+    
+    private void TriggerPulseEffect()
+    {
+        if (_currentCombo == 0 || !pulseEffectPrefab) return;
+        
+        // Pop current bubble
+        _currentBubble?.PopBubble();
+        
+    
+        if (_currentCombo == 1)
+        {
+            // At combo x1, just pop the next bubble too
+            _nextBubble?.PopBubble();
+        }
+        else if (_currentCombo >= 2)
+        {
+            // Calculate pulse radius based on combo
+            float pulseRadius = basePulseRadius + (_currentCombo * radiusPerCombo);
+        
+            // Get bubble spawn position (slightly in front of the gun)
+            Vector3 pulsePosition = bubbleSpawnPoint.position;
+        
+            // Spawn pulse effect
+            var pulseEffect = Instantiate(pulseEffectPrefab, pulsePosition, Quaternion.identity);
+            pulseEffect.Initialize(pulseRadius, pulseEffectDuration);
+        }
+    
+        // Animation
+        Sequence.Create()
+            .Group(Tween.PunchLocalPosition(gunTransform, strength: new Vector3(0, 0.1f, -1f), duration: gunAnimationTime, frequency: 1f))
+            .Group(Tween.ShakeLocalPosition(gunTransform, strength: new Vector3(0, 0.1f, -1f), duration: gunAnimationTime, frequency: 1f));
+    
+        
+        // Set the next bubble
+        ResetCombo();
+        SetCurrentBubble();
+    }
+
 
 
 #endregion Shooting // -----------------------------------------------------------------------------------------------------------------
@@ -208,6 +310,17 @@ public class PlayerGun : MonoBehaviour
         bubblesText.text = $"<sketchy>{amount}</>";
     }
     
+    private void UpdateComboUI()
+    {
+        if (!comboText || !comboBar) return;
+
+        comboText.text = $"<sketchy>{_currentCombo}x</>";
+        comboBar.color = _isComboActive ? comboActiveColor : comboInactiveColor;
+
+        _updateComboSequence = Sequence.Create()
+            .Group(Tween.PunchScale(comboText.transform, strength: comboText.transform.localScale * 1.5f, duration: 0.5f, frequency: 5f));
+    }
+    
 
 #endregion GunUI // -----------------------------------------------------------------------------------------------------------------
     
@@ -218,6 +331,14 @@ public class PlayerGun : MonoBehaviour
     {
         return Sequence.Create()
                 .Group(Tween.PunchLocalPosition(gunTransform, strength: new Vector3(0, 0.1f, -1f), duration: gunAnimationTime, frequency: 1f))
+            ;
+    }
+    
+    private Sequence GunPulseAnimation()
+    {
+        return Sequence.Create()
+                .Group(Tween.PunchLocalPosition(gunTransform, strength: new Vector3(0, 0.1f, -1f), duration: gunAnimationTime, frequency: 1f))
+                .Group(Tween.ShakeLocalPosition(gunTransform, strength: new Vector3(0, 0.1f, -1f), duration: gunAnimationTime, frequency: 1f))
             ;
     }
     private Sequence LoadBubble()

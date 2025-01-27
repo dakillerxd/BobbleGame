@@ -8,6 +8,7 @@ public class SOBubbleManager : ScriptableObject
     public BubbleBullet BubbleBulletPrefab;
     public BubbleAmmo BubbleAmmoPrefab;
     public BubbleObject BubbleObjectPrefab;
+    public BubbleBase BubbleBasePrefab;
     public Material[] BubbleColors;
     public Material BubbleNull;
     

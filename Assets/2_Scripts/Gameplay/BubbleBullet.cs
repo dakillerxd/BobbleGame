@@ -4,7 +4,6 @@ using UnityEngine;
 public class BubbleBullet : BubbleBase
 {
     private Rigidbody _rigidbody;
-    private PlayerGun _playerGun;
 
     protected override void Awake()
     {
@@ -22,8 +21,8 @@ public class BubbleBullet : BubbleBase
         
         if (collision.gameObject.TryGetComponent(out BubbleSetter bubbleSetter)) {
             
-            bubbleSetter.SetPlayerBubbleColor(_playerGun);
             PopBubble();
+            bubbleSetter.SetPlayerBubbleColor(PlayerGun);
             return;
         } 
         
@@ -56,12 +55,13 @@ public class BubbleBullet : BubbleBase
         
         bubbleObject.SetBubbleColor(BubbleColor());
         bubbleObject.MarkAsShot();
+        bubbleObject.SetPlayerGun(PlayerGun);
         Destroy(gameObject);
     }
     
     public void ShootInDirection(Vector3 direction, float force, PlayerGun player)
     {
         _rigidbody.AddForce(direction * force, ForceMode.Impulse);
-        _playerGun = player;
+        PlayerGun = player;
     }
 }

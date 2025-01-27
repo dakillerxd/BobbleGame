@@ -1705,8 +1705,14 @@ MonoBehaviour:
   shotForce: 15
   loadBubbleTime: 0.7
   gunAnimationTime: 0.3
+  comboTimeWindow: 7
+  maxCombo: 10
+  comboBarDrainSpeed: 1
   comboActiveColor: {r: 0, g: 1, b: 0, a: 1}
   comboInactiveColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  basePulseRadius: 3
+  radiusPerCombo: 0.5
+  pulseEffectDuration: 1
   inputReader: {fileID: 11400000, guid: bc4b1fd8e08cece4899198f6f0f7ad7f, type: 2}
   scoreText: {fileID: 2452454746748844214}
   bubblesText: {fileID: 8413940784670526693}
@@ -1717,6 +1723,7 @@ MonoBehaviour:
   currentBubbleTransform: {fileID: 2924550600364054848}
   nextBubbleTransform: {fileID: 8282509060131599836}
   bubbleManager: {fileID: 11400000, guid: ecac66a561a8fb64480f72c03a544133, type: 2}
+  pulseEffectPrefab: {fileID: 8351216888749373428, guid: 9c6d67b791b3f6543bb45ab390ca156e, type: 3}
   gunShotSfx: {fileID: 11400000, guid: e70df51a782bb684aa0aa54817775825, type: 2}
 --- !u!1 &8774800701445099001
 GameObject:

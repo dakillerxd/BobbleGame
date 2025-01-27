@@ -15,6 +15,7 @@ public class BubbleBase : MonoBehaviour
     [EndFoldout]
     
     [SerializeField] [ReadOnly] protected Material bubbleColor;
+    protected PlayerGun PlayerGun;
     private Sequence _popSequence;
     private Sequence _spawnSequence;
     
@@ -30,7 +31,7 @@ public class BubbleBase : MonoBehaviour
     }
     
 
-    protected void PopBubble(float delay = 0)
+    public void PopBubble(float delay = 0)
     {
         if (_popSequence.isAlive) return;
         _spawnSequence.Stop();
@@ -38,7 +39,7 @@ public class BubbleBase : MonoBehaviour
         _popSequence = Sequence.Create()
             .ChainDelay(delay)
             .Group(Tween.PunchScale(gameObject.transform, strength: new Vector3(1.2f, 1.2f, 1.2f), duration: 0.1f, frequency: 1, easeBetweenShakes: Ease.OutQuad))
-            .ChainCallback(() => { if (bubblePopSfx) bubblePopSfx.Play(); })
+            .ChainCallback(() => { if (bubblePopSfx) bubblePopSfx.PlayUsingDummyAs(); })
             .ChainCallback(() => Destroy(gameObject));
     }
     
@@ -68,6 +69,11 @@ public class BubbleBase : MonoBehaviour
         if (!bubbleManager) return;
         SetBubbleColor(bubbleManager.RandomColor());
 
+    }
+    
+    public void SetPlayerGun(PlayerGun gun)
+    {
+        PlayerGun = gun;
     }
     
 }

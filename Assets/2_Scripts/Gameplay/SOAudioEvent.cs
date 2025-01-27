@@ -35,7 +35,7 @@ public class SOAudioEvent : ScriptableObject
         source.Play();
     }
     
-    public void Play()
+    public void PlayUsingDummyAs()
     {
         if (clips.Length == 0) // Make sure there are clips
         {
