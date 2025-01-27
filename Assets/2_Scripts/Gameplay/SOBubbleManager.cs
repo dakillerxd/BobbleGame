@@ -4,13 +4,16 @@ using UnityEngine.Serialization;
 [CreateAssetMenu(fileName = "BubbleManager", menuName = "Scriptable Objects/BubbleManager")]
 public class SOBubbleManager : ScriptableObject
 {
-    
+    [Header("Bubble Types")]
     public BubbleBullet BubbleBulletPrefab;
     public BubbleAmmo BubbleAmmoPrefab;
     public BubbleObject BubbleObjectPrefab;
     public BubbleBase BubbleBasePrefab;
+    public BubblePulseEffect BubbleEffectPrefab;
+    
+    [Space(10)]
     public Material[] BubbleColors;
-    public Material BubbleNull;
+    public Material BubbleBaseColor;
     
     public Material RandomColor()
     {

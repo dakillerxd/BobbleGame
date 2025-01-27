@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 9072832115730619932}
   - component: {fileID: 8351216888749373428}
   m_Layer: 0
-  m_Name: GunPulseEffectPrefab
+  m_Name: BubblePulsePrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

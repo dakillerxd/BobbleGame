@@ -1,11 +1,9 @@
 using UnityEngine;
 using PrimeTween;
 
-[RequireComponent(typeof(SphereCollider))]
-[RequireComponent(typeof(MeshRenderer))]
-public class PlayerGunPulseEffect : MonoBehaviour
+
+public class BubblePulseEffect : BubbleBase
 {
-    private float _targetRadius;
     
     public void Initialize(float radius, float duration)
     {
@@ -13,7 +11,7 @@ public class PlayerGunPulseEffect : MonoBehaviour
         
         Sequence.Create()
             .Group(Tween.Scale(transform, startValue: Vector3.one * 0.1f, endValue: Vector3.one * radius, duration: duration, Ease.OutElastic))
-            .OnComplete(() => Destroy(gameObject));
+            .OnComplete(() => PopBubble());
     }
 
     private void OnTriggerEnter(Collider other)

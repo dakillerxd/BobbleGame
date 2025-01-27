@@ -43,7 +43,6 @@ public class PlayerGun : MonoBehaviour
     [SerializeField] private Transform currentBubbleTransform;
     [SerializeField] private Transform nextBubbleTransform;
     [SerializeField] private SOBubbleManager bubbleManager;
-    [SerializeField] private PlayerGunPulseEffect pulseEffectPrefab;
     [SerializeField] private SOAudioEvent gunShotSfx;
     [EndFoldout]
 
@@ -244,7 +243,6 @@ public class PlayerGun : MonoBehaviour
     
     private void TriggerPulseEffect()
     {
-        if (_currentCombo == 0 || !pulseEffectPrefab) return;
         
         // Pop current bubble
         _currentBubble?.PopBubble();
@@ -264,7 +262,7 @@ public class PlayerGun : MonoBehaviour
             Vector3 pulsePosition = bubbleSpawnPoint.position;
         
             // Spawn pulse effect
-            var pulseEffect = Instantiate(pulseEffectPrefab, pulsePosition, Quaternion.identity);
+            var pulseEffect = Instantiate(bubbleManager.BubbleEffectPrefab, pulsePosition, Quaternion.identity);
             pulseEffect.Initialize(pulseRadius, pulseEffectDuration);
         }
     
