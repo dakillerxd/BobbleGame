@@ -1504,8 +1504,8 @@ GameObject:
   - component: {fileID: 3633148452079879352}
   - component: {fileID: 3552524397716754400}
   - component: {fileID: 8097065142828954588}
-  - component: {fileID: 9111652403066454083}
   - component: {fileID: 561795473927122116}
+  - component: {fileID: 757380374071234127}
   - component: {fileID: 6710026791817536955}
   m_Layer: 0
   m_Name: Player
@@ -1653,19 +1653,6 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &9111652403066454083
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8593466462991696684}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: db91736cace1a8e44af1a972829fa519, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  deathSfx: {fileID: 11400000, guid: 7770827e3215e784998dee387df9aff4, type: 2}
 --- !u!114 &561795473927122116
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1688,6 +1675,19 @@ MonoBehaviour:
   runFovMultiplier: 1.3
   inputReader: {fileID: 11400000, guid: bc4b1fd8e08cece4899198f6f0f7ad7f, type: 2}
   virtualCamera: {fileID: 5943902487629072465}
+  deathSfx: {fileID: 11400000, guid: 7770827e3215e784998dee387df9aff4, type: 2}
+--- !u!114 &757380374071234127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8593466462991696684}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88c58cfcf049b534dbd7fcb558bb6644, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &6710026791817536955
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1723,7 +1723,6 @@ MonoBehaviour:
   currentBubbleTransform: {fileID: 2924550600364054848}
   nextBubbleTransform: {fileID: 8282509060131599836}
   bubbleManager: {fileID: 11400000, guid: ecac66a561a8fb64480f72c03a544133, type: 2}
-  pulseEffectPrefab: {fileID: 8351216888749373428, guid: 9c6d67b791b3f6543bb45ab390ca156e, type: 3}
   gunShotSfx: {fileID: 11400000, guid: e70df51a782bb684aa0aa54817775825, type: 2}
 --- !u!1 &8774800701445099001
 GameObject:

@@ -13,7 +13,7 @@ using VInspector;
 /// create a scriptable object and connect the input asset to it
 /// create a reference to the input reader and subscribe to the needed events in the mono behavior
 /// </summary>
-[CreateAssetMenu(fileName = "InputReader", menuName = "SO Input/Input Reader")]
+[CreateAssetMenu(fileName = "InputReader", menuName = "SO Manager/Input Reader")]
 public class SOInputReader : ScriptableObject
 {
     [SerializeField] private InputActionAsset inputAsset;

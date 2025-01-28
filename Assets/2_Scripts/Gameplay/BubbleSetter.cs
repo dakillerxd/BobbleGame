@@ -9,7 +9,7 @@ public class BubbleSetter : MonoBehaviour
     [Header("Settings")]
     [SerializeField] private float cooldownTime = 5;
     [SerializeField] private bool randomizeBubbleColor = false;
-    [HideIf("randomizeBubbleColor")][SerializeField] private Material bubbleColor;[EndIf]
+    [DisableIf("randomizeBubbleColor")][SerializeField] private Material bubbleColor;[EndIf]
     
     [Header("References")] 
     [SerializeField] private SOBubbleManager bubbleManager;

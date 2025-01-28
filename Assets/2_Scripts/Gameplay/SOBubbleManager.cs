@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 
-[CreateAssetMenu(fileName = "BubbleManager", menuName = "Scriptable Objects/BubbleManager")]
+[CreateAssetMenu(fileName = "BubbleManager", menuName = "SO Manager/Bubble Manager")]
 public class SOBubbleManager : ScriptableObject
 {
     [Header("Bubble Types")]

@@ -11,14 +11,14 @@ using UnityEngine.UI;
 public class PlayerGun : MonoBehaviour
 {
     [Header("Settings")] 
+    [SerializeField] private float shotForce = 15;
     [SerializeField] private float currentBubbleScale = 0.6f;
     [SerializeField] private float nextBubbleScale = 0.2f;
-    [SerializeField] private float shotForce = 15;
     [SerializeField] private float loadBubbleTime = 0.7f;
     [SerializeField] private float gunAnimationTime = 0.3f;
 
     
-    [Header("Combo Settings")] 
+    [Header("Combo")] 
     [Tooltip("Time in seconds before the combo resets")]
     [SerializeField] private float comboTimeWindow = 7f;
     [Tooltip("Maximum combo multiplier that can be achieved")]
@@ -27,6 +27,9 @@ public class PlayerGun : MonoBehaviour
     [SerializeField] private float comboBarDrainSpeed = 1f;
     [SerializeField] private Color comboActiveColor = Color.green;
     [SerializeField] private Color comboInactiveColor = Color.gray;
+    
+    
+    [Header("Bubble Pulse")] 
     [SerializeField] private float basePulseRadius = 3f;
     [SerializeField] private float radiusPerCombo = 0.5f;
     [SerializeField] private float pulseEffectDuration = 0.5f;

@@ -5,6 +5,9 @@ using UnityEngine.Serialization;
 using VInspector;
 
 [RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(AudioSource))]
+[RequireComponent(typeof(PlayerPowerUps))]
+[RequireComponent(typeof(PlayerGun))]
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement Settings")]
@@ -24,12 +27,15 @@ public class PlayerMovement : MonoBehaviour
     [Foldout("References")] 
     [SerializeField] private SOInputReader inputReader;
     [SerializeField] private CinemachineCamera virtualCamera;
+    [SerializeField] private SOAudioEvent deathSfx;
     [EndFoldout]
     
     
+    private AudioSource _audioSource;
     private CharacterController _controller;
     private CinemachinePanTilt _panTilt;
     private Vector3 _velocity;
+    private Vector3 _spawnPoint;
     public bool isGrounded {get; private set;}
     public bool isRunning {get; private set;}
     public bool isJumping {get; private set;}
@@ -39,28 +45,11 @@ public class PlayerMovement : MonoBehaviour
     private void Awake()
     {
         _controller = GetComponent<CharacterController>();
+        _audioSource = GetComponent<AudioSource>();
+        _spawnPoint = transform.position;
         SetupCamera();
     }
     
-    private void SetupCamera()
-    {
-        if (!virtualCamera) virtualCamera = GetComponentInChildren<CinemachineCamera>();
-        if (!virtualCamera)
-        {
-            Debug.LogError("Virtual Camera not found!");
-            return;
-        }
-        
-        _panTilt = virtualCamera.GetComponent<CinemachinePanTilt>();
-        if (!_panTilt)
-        {
-            _panTilt = virtualCamera.gameObject.AddComponent<CinemachinePanTilt>();
-        }
-        
-        SetupFov();
-        SetupCameraRange();
-        SetupCursor();
-    }
     
     private void Update()
     {
@@ -69,7 +58,31 @@ public class PlayerMovement : MonoBehaviour
         HandleGravity();
         UpdateFov();
     }
+    
+    private void OnEnable()
+    {
+        GameManager.OnSessionStart.AddListener(MoveToSpawnPoint);
+    }
 
+    private void OnDisable()
+    {
+        GameManager.OnSessionStart.RemoveListener(MoveToSpawnPoint);
+    }
+    
+    private void OnTriggerEnter(Collider other) 
+    {
+        if (other.CompareTag("Water"))
+        {
+            MoveToSpawnPoint();
+            GameManager.Instance?.PlayerDied();
+            deathSfx?.Play(_audioSource);
+            return;
+        }
+    }
+    
+
+    
+    
 #region Movement //---------------------------------------------------------------------------------------
 
     private void HandleMovement()
@@ -126,12 +139,37 @@ public class PlayerMovement : MonoBehaviour
     {
         return gravity;
     }
+    
+    private void MoveToSpawnPoint()
+    {
+        transform.position = _spawnPoint;
+    }
 
 #endregion Movement //---------------------------------------------------------------------------------------
-    
+
 
 
 #region Camera //---------------------------------------------------------------------------------------
+
+    private void SetupCamera()
+    {
+        if (!virtualCamera) virtualCamera = GetComponentInChildren<CinemachineCamera>();
+        if (!virtualCamera)
+        {
+            Debug.LogError("Virtual Camera not found!");
+            return;
+        }
+            
+        _panTilt = virtualCamera.GetComponent<CinemachinePanTilt>();
+        if (!_panTilt)
+        {
+            _panTilt = virtualCamera.gameObject.AddComponent<CinemachinePanTilt>();
+        }
+            
+        SetupFov();
+        SetupCameraRange();
+        SetupCursor();
+    }
 
     private void SetupCameraRange()
     {
@@ -177,6 +215,8 @@ public class PlayerMovement : MonoBehaviour
     
 
 #endregion Camera //---------------------------------------------------------------------------------------
+
+
 
 
 #if UNITY_EDITOR
