@@ -4,6 +4,7 @@ using UnityEngine;
 public class BubbleBullet : BubbleBase
 {
     private Rigidbody _rigidbody;
+    private bool _hasTurnedIntoBubble = false;
 
     protected override void Awake()
     {
@@ -24,17 +25,20 @@ public class BubbleBullet : BubbleBase
             PopBubble();
             bubbleSetter.SetPlayerBubbleColor(PlayerGun);
             return;
-        } 
-        
-        
-        
-        ContactPoint contact = collision.GetContact(0);
-        float bubbleRadius = bubbleManager.BubbleObjectPrefab.transform.localScale.x / 2f;
-        Vector3 spawnPosition = contact.point + (contact.normal * bubbleRadius);
+        }
+
+
+
+        if (!_hasTurnedIntoBubble)
+        {
+            _hasTurnedIntoBubble = true;
+            ContactPoint contact = collision.GetContact(0);
+            float bubbleRadius = bubbleManager.BubbleObjectPrefab.transform.localScale.x / 2f;
+            Vector3 spawnPosition = contact.point + (contact.normal * bubbleRadius);
     
-        TurnIntoBubbleObject(spawnPosition);
-        
-        
+            TurnIntoBubbleObject(spawnPosition);
+
+        }
     }
     
     private void OnTriggerEnter(Collider other) 
@@ -52,7 +56,6 @@ public class BubbleBullet : BubbleBase
             spawnPosition, 
             Quaternion.identity
         );
-        
         bubbleObject.SetBubbleColor(BubbleColor());
         bubbleObject.MarkAsShot();
         bubbleObject.SetPlayerGun(PlayerGun);
