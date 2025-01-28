@@ -53,7 +53,7 @@ public class PlayerMovement : MonoBehaviour
     
     // Input state variables
     private Vector2 _moveInput;
-    private bool _isRunning;
+    private bool _runInput;
     private bool _wantsToDash;
     
     // Public state properties
@@ -126,7 +126,7 @@ public class PlayerMovement : MonoBehaviour
         
     private void GetRunningInput(InputAction.CallbackContext context)
     {
-        _isRunning = context.phase == InputActionPhase.Started || context.phase == InputActionPhase.Performed;
+        _runInput = context.phase == InputActionPhase.Started || context.phase == InputActionPhase.Performed;
     }
         
     private void GetJumpInput(InputAction.CallbackContext context)
@@ -159,8 +159,9 @@ public class PlayerMovement : MonoBehaviour
         Vector3 moveDir = (cameraForward * _moveInput.y + cameraRight * _moveInput.x).normalized;
     
         // Apply movement speed
-        float targetMoveSpeed = _isRunning ? runSpeed : walkSpeed;
-        isRunning = _isRunning;
+        isRunning = _runInput && canRun;
+        float targetMoveSpeed = isRunning ? runSpeed : walkSpeed;
+        
     
         // Move
         _controller.Move(moveDir * (targetMoveSpeed * Time.deltaTime));
@@ -259,23 +260,36 @@ public class PlayerMovement : MonoBehaviour
     private void HandleGravity()
     {
         if (isDashing) return;
-    
+
+        // Store previous grounded state to detect when we leave the ground
         bool wasGrounded = isGrounded;
-        isGrounded = _controller.isGrounded;
     
+        // Update current grounded state
+        isGrounded = _controller.isGrounded;
+        isFalling = _velocity.y < 0;
+
+        // Handle coyote time
         if (isGrounded)
         {
+            // Reset coyote time when we're grounded
             _coyoteTimeCounter = coyoteTime;
+        
+            // Apply a small downward force when grounded to keep us grounded
+            if (_velocity.y < 0)
+            {
+                _velocity.y = -2f;
+            }
         }
-        else if (wasGrounded) // Just left the ground
+        else if (wasGrounded)
         {
+            // Start coyote time when we just left the ground
             _coyoteTimeCounter = coyoteTime;
         }
         else
         {
+            // Count down coyote time when in the air
             _coyoteTimeCounter -= Time.deltaTime;
         }
-        // ...
     }
     
     public void SetVelocity(Vector3 newVelocity)

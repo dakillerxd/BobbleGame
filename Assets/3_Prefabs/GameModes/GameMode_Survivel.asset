@@ -19,22 +19,22 @@ MonoBehaviour:
   scoreMultiplier: 1
   waveInterval: 5
   enableWaveScaling: 1
-  initialBubblesPerWave: 10
+  initialBubblesPerWave: 5
   bubbleScaling: 1.5
   maxBubblesPerWave: 20
-  minBubblesPerWave: 5
+  minBubblesPerWave: 3
   enableSpawnerScaling: 1
   initialSpawnersPerWave: 1
-  spawnerScaling: 1.2
+  spawnerScaling: 1.5
   maxSpawnersPerWave: 5
   minSpawnersPerWave: 1
   enableTimeBoosts: 0
   timeBoostAmount: 5
   scoreRequiredForTimeBoost: 1000
-  spawnerSelectionMode: 1
+  spawnerSelectionMode: 3
   spawnersPerWave: 1
   allowConsecutiveReuse: 1
-  maxBubbleAmount: 3
+  maxBubbleAmount: 5
   minBubbleAmount: 1
   sameColorSpawnChance: 0.6
   useTimeForWinCondition: 0
