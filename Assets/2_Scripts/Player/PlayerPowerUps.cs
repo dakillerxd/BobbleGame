@@ -17,11 +17,11 @@ public class PlayerPowerUps : MonoBehaviour
     private  float _superBubbleTimer;
     
     
-    
-    [field: SerializeField] [ReadOnly] public bool isSpeedBoosted { get; private set; } = false;
-    [field: SerializeField] [ReadOnly] public bool isSuperBubble { get; private set; } = false;
     private PlayerMovement _playerMovement;
     private PlayerGun _playerGun;
+    [field: SerializeField] public bool isSpeedBoosted { get; private set; } = false;
+    [field: SerializeField] public bool isSuperBubble { get; private set; } = false;
+
 
     private void Awake()
     {

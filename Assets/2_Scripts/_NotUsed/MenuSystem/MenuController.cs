@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using CustomAttribute;
+using UnityEngine.InputSystem;
 
 public class MenuController : MonoBehaviour
 {
@@ -40,29 +41,31 @@ public class MenuController : MonoBehaviour
         inputReader.ToggleMenuEvent -= OnToggleMenu;
     }
     
-    private void OnNavigate(Vector2 context) // Input event
+    private void OnNavigate(InputAction.CallbackContext context) // Input event
     {
 
         if (currentCategory) 
         {
-            currentCategory.OnNavigate(context);
+            currentCategory.OnNavigate(context.ReadValue<Vector2>());
         }
     }
     
-    private void OnToggleMenu() // Input event
+    private void OnToggleMenu(InputAction.CallbackContext context) // Input event
     {
         if (!currentCategory) return;
         
-        
-        if (!currentCategory.IsAtFirstPage) // if the first page is not the one that is selected pass on the event
+        if (context.phase == InputActionPhase.Performed)
         {
-            currentCategory.OnToggleMenu();
+            if (!currentCategory.IsAtFirstPage) // if the first page is not the one that is selected pass on the event
+            {
+                currentCategory.OnToggleMenu();
                 
-        } else if (currentCategory != menuCategories[0]) { // Else go to the first menu
+            } else if (currentCategory != menuCategories[0]) { // Else go to the first menu
                 
-            SelectFirstCategory();
+                SelectFirstCategory();
+            }
         }
-
+        
     }
     
 

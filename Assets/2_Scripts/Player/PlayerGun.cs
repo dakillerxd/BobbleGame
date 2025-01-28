@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using VInspector;
 using PrimeTween;
+using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
@@ -17,6 +18,11 @@ public class PlayerGun : MonoBehaviour
     [SerializeField] private float loadBubbleTime = 0.7f;
     [SerializeField] private float gunAnimationTime = 0.3f;
 
+    [Header("Action Buffering")]
+    [SerializeField] private float shootBufferTime = 0.1f;
+    [SerializeField] private float pulseBufferTime = 0.1f;
+    [SerializeField] private float shootCooldown = 0.2f; // Minimum time between shots when holding
+    [SerializeField] private float pulseCooldown = 0.3f; // Minimum time between pulses when holding
     
     [Header("Combo")] 
     [Tooltip("Time in seconds before the combo resets")]
@@ -28,12 +34,10 @@ public class PlayerGun : MonoBehaviour
     [SerializeField] private Color comboActiveColor = Color.green;
     [SerializeField] private Color comboInactiveColor = Color.gray;
     
-    
     [Header("Bubble Pulse")] 
     [SerializeField] private float basePulseRadius = 3f;
     [SerializeField] private float radiusPerCombo = 0.5f;
-    [SerializeField] private float pulseEffectDuration = 0.5f;
-    
+    [SerializeField] private float pulseEffectDuration = 1f;
     
     [Foldout("References")]
     [SerializeField] private SOInputReader inputReader;
@@ -49,7 +53,6 @@ public class PlayerGun : MonoBehaviour
     [SerializeField] private SOAudioEvent gunShotSfx;
     [EndFoldout]
 
-
     private PlayerMovement _playerMovement;
     private AudioSource _audioSource;
     private BubbleAmmo _currentBubble;
@@ -58,8 +61,14 @@ public class PlayerGun : MonoBehaviour
     private float _comboTimeLeft;
     private bool _isComboActive;
 
+    // Input state and buffer variables
+    private float _shootBufferCounter;
+    private float _pulseBufferCounter;
+    private float _shootCooldownCounter;
+    private float _pulseCooldownCounter;
+    private bool _isShootHeld;
+    private bool _isPulseHeld;
 
-    
     // Animations
     private Sequence _updateScoreSequence;
     private Sequence _updateBubbleSequence;
@@ -70,13 +79,11 @@ public class PlayerGun : MonoBehaviour
     private Vector3 _defaultCurrentBubbleTransformPosition;
     private Vector3 _defaultNextBubbleTransformPosition;
     private Vector3 _defaultGunTransformPosition;
-    
-    
+
     private void Awake()
     {
         _playerMovement = GetComponent<PlayerMovement>();
         _audioSource = GetComponent<AudioSource>();
-        
         
         // Check transforms
         if (!bubbleSpawnPoint || !currentBubbleTransform || !nextBubbleTransform || !gunTransform)
@@ -99,7 +106,6 @@ public class PlayerGun : MonoBehaviour
             return;
         }
         
-        
         _defaultCurrentBubbleTransformPosition = currentBubbleTransform.localPosition;
         _defaultNextBubbleTransformPosition = nextBubbleTransform.localPosition;
         _defaultGunTransformPosition = gunTransform.localPosition;
@@ -112,31 +118,55 @@ public class PlayerGun : MonoBehaviour
 
     private void OnEnable()
     {
+        inputReader.ShootEvent += GetShootInput;
+        inputReader.ShootSecondEvent += GetBubblePulseInput;
+        
         GameManager.OnScoreUpdate.AddListener(SetScoreText);
         GameManager.OnBubbleLeftUpdate.AddListener(SetBubbleText);
     }
-    
+
     private void OnDisable()
     {
+        inputReader.ShootEvent -= GetShootInput;
+        inputReader.ShootSecondEvent -= GetBubblePulseInput;
         GameManager.OnScoreUpdate.RemoveListener(SetScoreText);
         GameManager.OnBubbleLeftUpdate.RemoveListener(SetBubbleText);
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Mouse0)) // Shooting
-        {
-            ShootBubble();
-        }
-        
-        if (Input.GetKeyDown(KeyCode.Mouse1)) // Bubble pulse
-        {
-            TriggerPulseEffect();
-        }
-
+        UpdateBufferTimers();
+        HandleShooting();
+        HandleBubblePulse();
         UpdateCombo();
     }
-    
+
+    private void UpdateBufferTimers()
+    {
+        // Update shoot buffer
+        if (_shootBufferCounter > 0f)
+        {
+            _shootBufferCounter -= Time.deltaTime;
+        }
+
+        // Update pulse buffer
+        if (_pulseBufferCounter > 0f)
+        {
+            _pulseBufferCounter -= Time.deltaTime;
+        }
+
+        // Update shoot cooldown
+        if (_shootCooldownCounter > 0f)
+        {
+            _shootCooldownCounter -= Time.deltaTime;
+        }
+
+        // Update pulse cooldown
+        if (_pulseCooldownCounter > 0f)
+        {
+            _pulseCooldownCounter -= Time.deltaTime;
+        }
+    }
 
     public void OnBubblesPopped(int amount)
     {
@@ -146,24 +176,52 @@ public class PlayerGun : MonoBehaviour
         }
     }
 
-    
-    
-#region Shooting // -----------------------------------------------------------------------------------------------------------------
+    #region Input
 
-    private void ShootBubble()
+    private void GetBubblePulseInput(InputAction.CallbackContext context)
+    {
+        if (context.phase == InputActionPhase.Started)
+        {
+            _pulseBufferCounter = pulseBufferTime;
+        }
+        _isPulseHeld = context.phase == InputActionPhase.Started || context.phase == InputActionPhase.Performed;
+    }
+
+    private void GetShootInput(InputAction.CallbackContext context)
+    {
+        if (context.phase == InputActionPhase.Started)
+        {
+            _shootBufferCounter = shootBufferTime;
+        }
+        _isShootHeld = context.phase == InputActionPhase.Started || context.phase == InputActionPhase.Performed;
+    }
+
+    #endregion
+
+    #region Shooting
+
+    private void HandleShooting()
     {
         if (!_currentBubble) return;
-        BubbleBullet bubbleBullet = Instantiate(bubbleManager.BubbleBulletPrefab, bubbleSpawnPoint.position, Quaternion.identity);
-        bubbleBullet.SetBubbleColor(_currentBubble.BubbleColor());
-        bubbleBullet.ShootInDirection(_playerMovement.GetAimDirection(), shotForce, this);
-        _gunShootSequence = GunShootAnimation();
-        gunShotSfx?.Play(_audioSource);
-        
-        ClearCurrentBubble();
-        SetCurrentBubble();
-    }
-    
 
+        bool canShoot = (_shootBufferCounter > 0f || _isShootHeld) && _shootCooldownCounter <= 0f;
+        
+        if (canShoot)
+        {
+            BubbleBullet bubbleBullet = Instantiate(bubbleManager.BubbleBulletPrefab, bubbleSpawnPoint.position, Quaternion.identity);
+            bubbleBullet.SetBubbleColor(_currentBubble.BubbleColor());
+            bubbleBullet.ShootInDirection(_playerMovement.GetAimDirection(), shotForce, this);
+            _gunShootSequence = GunShootAnimation();
+            gunShotSfx?.Play(_audioSource);
+
+            // Reset timers
+            _shootBufferCounter = 0f;
+            _shootCooldownCounter = shootCooldown;
+
+            ClearCurrentBubble();
+            SetCurrentBubble();
+        }
+    }
 
     private void SetCurrentBubble()
     {
@@ -181,7 +239,6 @@ public class PlayerGun : MonoBehaviour
         _currentBubble = Instantiate(bubbleManager.BubbleAmmoPrefab, currentBubbleTransform.position, Quaternion.identity, currentBubbleTransform);
         _currentBubble.SetBubbleColor(bubbleColor);
     }
-    
 
     private void SetNewNextBubble()
     {
@@ -192,7 +249,6 @@ public class PlayerGun : MonoBehaviour
 
     private void ClearCurrentBubble()
     {
-        // Clear all children of the current bubble transform
         _currentBubble = null;
         foreach (Transform child in currentBubbleTransform)
         {
@@ -202,14 +258,59 @@ public class PlayerGun : MonoBehaviour
 
     private void ClearNextBubble()
     {
-        // Clear all children of the next bubble transform
         _nextBubble = null;
         foreach (Transform child in nextBubbleTransform)
         {
             Destroy(child.gameObject);
         }
     }
-    
+
+    private void HandleBubblePulse()
+    {
+        bool canPulse = (_pulseBufferCounter > 0f || _isPulseHeld) && _pulseCooldownCounter <= 0f;
+        
+        if (canPulse)
+        {
+            // Reset pulse buffer and set cooldown
+            _pulseBufferCounter = 0f;
+            _pulseCooldownCounter = pulseCooldown;
+
+            // Pop current bubble
+            _currentBubble?.PopBubble();
+
+            if (_currentCombo == 1)
+            {
+                // At combo x1, just pop the next bubble too
+                _nextBubble?.PopBubble();
+            }
+            else if (_currentCombo >= 2)
+            {
+                // Calculate pulse radius based on combo
+                float pulseRadius = basePulseRadius + (_currentCombo * radiusPerCombo);
+                
+                // Get bubble spawn position
+                Vector3 pulsePosition = bubbleSpawnPoint.position;
+                
+                // Spawn pulse effect
+                var pulseEffect = Instantiate(bubbleManager.BubbleEffectPrefab, pulsePosition, Quaternion.identity);
+                pulseEffect.Initialize(pulseRadius, pulseEffectDuration);
+            }
+
+            // Animation
+            Sequence.Create()
+                .Group(Tween.PunchLocalPosition(gunTransform, strength: new Vector3(0, 0.1f, -1f), duration: gunAnimationTime, frequency: 1f))
+                .Group(Tween.ShakeLocalPosition(gunTransform, strength: new Vector3(0, 0.1f, -1f), duration: gunAnimationTime, frequency: 1f));
+
+            // Reset combo and set next bubble
+            ResetCombo();
+            SetCurrentBubble();
+        }
+    }
+
+    #endregion
+
+    #region Combo
+
     private void UpdateCombo()
     {
         if (!_isComboActive) return;
@@ -243,71 +344,26 @@ public class PlayerGun : MonoBehaviour
     
         UpdateComboUI();
     }
-    
-    private void TriggerPulseEffect()
-    {
-        
-        // Pop current bubble
-        _currentBubble?.PopBubble();
-        
-    
-        if (_currentCombo == 1)
-        {
-            // At combo x1, just pop the next bubble too
-            _nextBubble?.PopBubble();
-        }
-        else if (_currentCombo >= 2)
-        {
-            // Calculate pulse radius based on combo
-            float pulseRadius = basePulseRadius + (_currentCombo * radiusPerCombo);
-        
-            // Get bubble spawn position (slightly in front of the gun)
-            Vector3 pulsePosition = bubbleSpawnPoint.position;
-        
-            // Spawn pulse effect
-            var pulseEffect = Instantiate(bubbleManager.BubbleEffectPrefab, pulsePosition, Quaternion.identity);
-            pulseEffect.Initialize(pulseRadius, pulseEffectDuration);
-        }
-    
-        // Animation
-        Sequence.Create()
-            .Group(Tween.PunchLocalPosition(gunTransform, strength: new Vector3(0, 0.1f, -1f), duration: gunAnimationTime, frequency: 1f))
-            .Group(Tween.ShakeLocalPosition(gunTransform, strength: new Vector3(0, 0.1f, -1f), duration: gunAnimationTime, frequency: 1f));
-    
-        
-        // Set the next bubble
-        ResetCombo();
-        SetCurrentBubble();
-    }
 
+    #endregion
 
+    #region UI
 
-#endregion Shooting // -----------------------------------------------------------------------------------------------------------------
-
-
-#region GunUI // -----------------------------------------------------------------------------------------------------------------
-    
     private void SetScoreText(int score)
     {
         if (!scoreText) return;
         
         _updateScoreSequence = Sequence.Create()
-                .Group(Tween.PunchScale(scoreText.transform, strength: scoreText.transform.localScale * 1.5f, duration: 0.5f, frequency: 5f))
-            // .Group(Tween.ShakeLocalPosition(scoreText.transform, strength: new Vector3(scoreText.transform.position.x, 0.02f, 0.02f), duration: 0.5f, frequency: 3f))
-            ;
+            .Group(Tween.PunchScale(scoreText.transform, strength: scoreText.transform.localScale * 1.5f, duration: 0.5f, frequency: 5f));
         scoreText.text = $"<sketchy>{score}</>";
-
     }
 
     private void SetBubbleText(int amount)
     {
         if (!bubblesText) return;
         
-        
         _updateBubbleSequence = Sequence.Create()
-                .Group(Tween.PunchScale(bubblesText.transform, strength: scoreText.transform.localScale * 1.5f, duration: 0.5f, frequency: 5f))
-            // .Group(Tween.ShakeLocalPosition(bubblesText.transform, strength: new Vector3(scoreText.transform.position.x, 0.02f, 0.02f), duration: 0.5f, frequency: 3f))
-            ;
+            .Group(Tween.PunchScale(bubblesText.transform, strength: scoreText.transform.localScale * 1.5f, duration: 0.5f, frequency: 5f));
         bubblesText.text = $"<sketchy>{amount}</>";
     }
     
@@ -321,61 +377,43 @@ public class PlayerGun : MonoBehaviour
         _updateComboSequence = Sequence.Create()
             .Group(Tween.PunchScale(comboText.transform, strength: comboText.transform.localScale * 1.5f, duration: 0.5f, frequency: 5f));
     }
-    
 
-#endregion GunUI // -----------------------------------------------------------------------------------------------------------------
-    
-    
-#region Animations // -----------------------------------------------------------------------------------------------------------------
+    #endregion
+
+    #region Animations
     
     private Sequence GunShootAnimation()
     {
         return Sequence.Create()
-                .Group(Tween.PunchLocalPosition(gunTransform, strength: new Vector3(0, 0.1f, -1f), duration: gunAnimationTime, frequency: 1f))
-            ;
+            .Group(Tween.PunchLocalPosition(gunTransform, strength: new Vector3(0, 0.1f, -1f), duration: gunAnimationTime, frequency: 1f));
     }
     
-    private Sequence GunPulseAnimation()
-    {
-        return Sequence.Create()
-                .Group(Tween.PunchLocalPosition(gunTransform, strength: new Vector3(0, 0.1f, -1f), duration: gunAnimationTime, frequency: 1f))
-                .Group(Tween.ShakeLocalPosition(gunTransform, strength: new Vector3(0, 0.1f, -1f), duration: gunAnimationTime, frequency: 1f))
-            ;
-    }
     private Sequence LoadBubble()
     {
-        
         return Sequence.Create()
-                .Group(Tween.LocalPosition(currentBubbleTransform, startValue: _defaultNextBubbleTransformPosition, endValue: _defaultCurrentBubbleTransformPosition, duration: loadBubbleTime, Ease.OutBack))
-                .Group(Tween.Scale(currentBubbleTransform, startValue: nextBubbleScale /2, endValue: currentBubbleScale, duration: loadBubbleTime * 2, Ease.OutBack))
-            ;
+            .Group(Tween.LocalPosition(currentBubbleTransform, startValue: _defaultNextBubbleTransformPosition, endValue: _defaultCurrentBubbleTransformPosition, duration: loadBubbleTime, Ease.OutBack))
+            .Group(Tween.Scale(currentBubbleTransform, startValue: nextBubbleScale /2, endValue: currentBubbleScale, duration: loadBubbleTime * 2, Ease.OutBack));
     }
     
     private Sequence LoadNextBubble()
     {
         return Sequence.Create()
-                .Group(Tween.Scale(nextBubbleTransform, startValue: 0.1f, endValue: nextBubbleScale, duration: loadBubbleTime, Ease.OutBack))
-            ;
+            .Group(Tween.Scale(nextBubbleTransform, startValue: 0.1f, endValue: nextBubbleScale, duration: loadBubbleTime, Ease.OutBack));
     }
-    
 
-#endregion Animations // -----------------------------------------------------------------------------------------------------------------
-    
-    
+    #endregion Animations
 
-    
 #if UNITY_EDITOR
-    
     private void OnValidate()
     {
         if (currentBubbleTransform)
         {
-            currentBubbleTransform.localScale = new Vector3(currentBubbleScale,currentBubbleScale,currentBubbleScale);
+            currentBubbleTransform.localScale = new Vector3(currentBubbleScale, currentBubbleScale, currentBubbleScale);
         }
         
         if (nextBubbleTransform)
         {
-            nextBubbleTransform.localScale = new Vector3(nextBubbleScale,nextBubbleScale,nextBubbleScale);
+            nextBubbleTransform.localScale = new Vector3(nextBubbleScale, nextBubbleScale, nextBubbleScale);
         }
     }
 #endif

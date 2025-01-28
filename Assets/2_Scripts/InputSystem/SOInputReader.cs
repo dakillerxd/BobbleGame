@@ -28,6 +28,11 @@ public class SOInputReader : ScriptableObject
     private InputAction _moveAction;
     private InputAction _lookAction;
     private InputAction _jumpAction;
+    private InputAction _runAction;
+    private InputAction _dashAction;
+    private InputAction _shootAction;
+    private InputAction _shootSecondAction;
+    private InputAction _crouchAction;
     private InputAction _restartAction;
     private InputAction _toggleMenu;
     private InputAction _navigateAction;
@@ -35,13 +40,16 @@ public class SOInputReader : ScriptableObject
     
     // Events that other classes can subscribe to
     public event Action<ControlType> ControlSchemeChangedEvent;
-    public event Action<Vector2> MoveEvent;
-    public event Action<Vector2> LookEvent;
-    public event Action JumpEvent;
-    public event Action JumpCancelledEvent;
-    public event Action ToggleMenuEvent;
-    public event Action RestartEvent;
-    public event Action<Vector2> NavigateEvent;
+    public event Action<InputAction.CallbackContext> MoveEvent;
+    public event Action<InputAction.CallbackContext> LookEvent;
+    public event Action<InputAction.CallbackContext> JumpEvent;
+    public event  Action<InputAction.CallbackContext> ShootEvent;
+    public event Action<InputAction.CallbackContext> ShootSecondEvent;
+    public event Action<InputAction.CallbackContext> RunEvent;
+    public event Action<InputAction.CallbackContext> DashEvent;
+    public event Action<InputAction.CallbackContext> ToggleMenuEvent;
+    public event Action<InputAction.CallbackContext> RestartEvent;
+    public event Action<InputAction.CallbackContext> NavigateEvent;
     
     //  public state properties for other classes for easier checks
     public ControlType CurrentControlScheme { get; private set; }
@@ -62,6 +70,10 @@ public class SOInputReader : ScriptableObject
         _moveAction = inputAsset.FindAction("Move");
         _lookAction = inputAsset.FindAction("Look");
         _jumpAction = inputAsset.FindAction("Jump");
+        _runAction = inputAsset.FindAction("Run");
+        _dashAction = inputAsset.FindAction("Dash");
+        _shootAction = inputAsset.FindAction("Shoot");
+        _shootSecondAction = inputAsset.FindAction("ShootSecond");
         _toggleMenu = inputAsset.FindAction("ToggleMenu");
         _restartAction = inputAsset.FindAction("Restart");
         _navigateAction = inputAsset.FindAction("Navigate");
@@ -70,6 +82,10 @@ public class SOInputReader : ScriptableObject
         _moveAction.EnableAndSubscribe(OnMove);
         _lookAction.EnableAndSubscribe(OnLook);
         _jumpAction.EnableAndSubscribe(OnJump);
+        _runAction.EnableAndSubscribe(OnRun);
+        _shootAction.EnableAndSubscribe(OnShoot);
+        _shootSecondAction.EnableAndSubscribe(OnShootSecond);
+        _dashAction.EnableAndSubscribe(OnDash);
         _toggleMenu.EnableAndSubscribe(OnToggleMenu);
         _restartAction.EnableAndSubscribe(OnRestart);
         _navigateAction.EnableAndSubscribe(OnNavigate);
@@ -92,6 +108,10 @@ public class SOInputReader : ScriptableObject
         _moveAction.DisableAndUnsubscribe(OnMove);
         _jumpAction.DisableAndUnsubscribe(OnJump);
         _lookAction.DisableAndUnsubscribe(OnLook);
+        _runAction.DisableAndUnsubscribe(OnRun);
+        _shootAction.DisableAndUnsubscribe(OnShoot);
+        _shootSecondAction.DisableAndUnsubscribe(OnShootSecond);
+        _dashAction.DisableAndUnsubscribe(OnDash);
         _toggleMenu.DisableAndUnsubscribe(OnToggleMenu);
         _restartAction.DisableAndUnsubscribe(OnRestart);
         _navigateAction.DisableAndUnsubscribe(OnNavigate);
@@ -156,65 +176,53 @@ public class SOInputReader : ScriptableObject
 
     private void OnMove(InputAction.CallbackContext context)
     {
-        MoveEvent?.Invoke(context.ReadValue<Vector2>());
+        MoveEvent?.Invoke(context);
         CurrentMoveInput = context.ReadValue<Vector2>();
-        //if (printDebug) Debug.Log($"Phase: {context.phase}, Value: {context.ReadValue<Vector2>()}");
     }
     
     private void OnLook(InputAction.CallbackContext context)
     {
-        LookEvent?.Invoke(context.ReadValue<Vector2>());
-        //if (printDebug) Debug.Log($"Phase: {context.phase}, Value: {context.ReadValue<Vector2>()}");
+        LookEvent?.Invoke(context);
     }
-    
     
     private void OnJump(InputAction.CallbackContext context)
     {
-        switch (context.phase)
-        {
-            case InputActionPhase.Started:
-                JumpEvent?.Invoke();
-                break;
-            case InputActionPhase.Performed:
-
-                break;
-            case InputActionPhase.Canceled:
-                JumpCancelledEvent?.Invoke();
-                break;
-        }
+        JumpEvent?.Invoke(context);
+    }
     
-        //if (printDebug) Debug.Log($"Phase: {context.phase}, Value: {context.ReadValue<float>()}");
+    private void OnRun(InputAction.CallbackContext context)
+    {
+        RunEvent?.Invoke(context);
+    }
+    
+    private void OnDash(InputAction.CallbackContext context)
+    {
+        DashEvent?.Invoke(context);
+    }
+    
+    private void OnShoot(InputAction.CallbackContext context)
+    {
+        ShootEvent?.Invoke(context);
+    }
+    
+    private void OnShootSecond(InputAction.CallbackContext context)
+    {
+        ShootSecondEvent?.Invoke(context);
     }
     
     private void OnToggleMenu(InputAction.CallbackContext context)
     {
-        if (context.phase == InputActionPhase.Performed)
-        {
-            ToggleMenuEvent?.Invoke();
-        }
-        
-        //if (printDebug) Debug.Log($"Phase: {context.phase}, Value: {context.ReadValue<float>()}");
-        
+        ToggleMenuEvent?.Invoke(context);
     }
-    
     
     private void OnRestart(InputAction.CallbackContext context)
     {
-        if (context.phase == InputActionPhase.Performed)
-        {
-            RestartEvent?.Invoke();
-        }
-        
-        //if (printDebug) Debug.Log($"Phase: {context.phase}, Value: {context.ReadValue<float>()}");
+        RestartEvent?.Invoke(context);
     }
     
     private void OnNavigate(InputAction.CallbackContext context)
     {
-        if (context.phase == InputActionPhase.Performed)
-        {
-            NavigateEvent?.Invoke(context.ReadValue<Vector2>());
-        }
-        //if (printDebug) Debug.Log($"Phase: {context.phase}, Value: {context.ReadValue<Vector2>()}");
+        NavigateEvent?.Invoke(context);
     }
 
     #endregion Actions -----------------------------------------------------------------------------------------------------------------

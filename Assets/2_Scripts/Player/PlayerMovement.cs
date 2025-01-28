@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using Unity.Cinemachine;
+using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 using VInspector;
 
@@ -11,13 +12,16 @@ using VInspector;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement Settings")]
-    [SerializeField] private float walkSpeed = 6f;
-    [SerializeField] private float runSpeed = 9f;
+    [SerializeField] private float walkSpeed = 9f;
+    [SerializeField] private bool canRun = false;
+    [ShowIf("canRun")][SerializeField] private float runSpeed = 11f;[EndIf]
     [SerializeField] private float jumpForce = 5f;
-    [SerializeField] private float gravity = -15f; // -9.81f;
+    [SerializeField] private float gravity = -15f;
+    [SerializeField] private float jumpBufferTime = 0.1f;
+    [SerializeField] private float coyoteTime = 0.1f;
     
     [Header("Dash Settings")]
-    [SerializeField] private float dashSpeed = 20f;
+    [SerializeField] private float dashSpeed = 50f;
     [SerializeField] private float dashDuration = 0.2f;
     [SerializeField] private float dashCooldown = 1f;
     [SerializeField] private AnimationCurve dashSpeedCurve = AnimationCurve.EaseInOut(0, 1, 1, 0);
@@ -36,7 +40,6 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private SOAudioEvent deathSfx;
     [EndFoldout]
     
-    
     private AudioSource _audioSource;
     private CharacterController _controller;
     private CinemachinePanTilt _panTilt;
@@ -45,12 +48,20 @@ public class PlayerMovement : MonoBehaviour
     private float _dashTimeRemaining;
     private float _dashCooldownRemaining;
     private Vector3 _dashDirection;
-    public bool isGrounded {get; private set;}
-    public bool isRunning {get; private set;}
-    public bool isJumping {get; private set;}
-    public bool isFalling {get; private set;}
-    public bool isDashing {get; private set;}
-
+    private float _jumpBufferCounter;
+    private float _coyoteTimeCounter;
+    
+    // Input state variables
+    private Vector2 _moveInput;
+    private bool _isRunning;
+    private bool _wantsToDash;
+    
+    // Public state properties
+    public bool isGrounded { get; private set; }
+    public bool isRunning { get; private set; }
+    public bool isJumping { get; private set; }
+    public bool isFalling { get; private set; }
+    public bool isDashing { get; private set; }
     
     private void Awake()
     {
@@ -60,26 +71,29 @@ public class PlayerMovement : MonoBehaviour
         SetupCamera();
     }
     
-    
     private void OnEnable()
     {
+        inputReader.MoveEvent += GetMovementInput;
+        inputReader.RunEvent += GetRunningInput;
+        inputReader.JumpEvent += GetJumpInput;
+        inputReader.DashEvent += GetDashInput;
         GameManager.OnGameStateChanged.AddListener(MoveToSpawnPoint);
     }
 
     private void OnDisable()
     {
+        inputReader.MoveEvent -= GetMovementInput;
+        inputReader.RunEvent -= GetRunningInput;
+        inputReader.JumpEvent -= GetJumpInput;
+        inputReader.DashEvent -= GetDashInput;
         GameManager.OnGameStateChanged.RemoveListener(MoveToSpawnPoint);
     }
     
     private void Update()
     {
-        if (!isDashing)
-        {
-            HandleMovement();
-            HandleJumping();
-            HandleGravity();
-        }
-        
+        HandleMovement();
+        HandleJump();
+        HandleGravity();
         HandleDashing();
         UpdateFov();
     }
@@ -102,42 +116,81 @@ public class PlayerMovement : MonoBehaviour
             }
         }
     }
-    
 
+#region Input // ---------------------------------------------------------------------------------------
+
+    private void GetMovementInput(InputAction.CallbackContext context)
+    {
+        _moveInput = context.ReadValue<Vector2>();
+    }
+        
+    private void GetRunningInput(InputAction.CallbackContext context)
+    {
+        _isRunning = context.phase == InputActionPhase.Started || context.phase == InputActionPhase.Performed;
+    }
+        
+    private void GetJumpInput(InputAction.CallbackContext context)
+    {
+        if (context.phase == InputActionPhase.Started)
+        {
+            _jumpBufferCounter = jumpBufferTime;
+        }
+    }
+    
+    private void GetDashInput(InputAction.CallbackContext context)
+    {
+        _wantsToDash = context.phase == InputActionPhase.Performed;
+    }
+
+#endregion Input // ---------------------------------------------------------------------------------------
     
     
 #region Movement //---------------------------------------------------------------------------------------
 
     private void HandleMovement()
     {
-        // Check input
-        float horizontalInput = Input.GetAxis("Horizontal");
-        float verticalInput = Input.GetAxis("Vertical");
+        if (isDashing) return;
     
         // Get the camera direction
         Vector3 cameraForward = GetMovementDirection();
         Vector3 cameraRight = Quaternion.Euler(0, 90, 0) * cameraForward;
     
         // Calculate move direction relative to camera
-        Vector3 moveDir = (cameraForward * verticalInput + cameraRight * horizontalInput).normalized;
+        Vector3 moveDir = (cameraForward * _moveInput.y + cameraRight * _moveInput.x).normalized;
     
-        // Check if running
-        float targetMoveSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
-        isRunning = Input.GetKey(KeyCode.LeftShift);
+        // Apply movement speed
+        float targetMoveSpeed = _isRunning ? runSpeed : walkSpeed;
+        isRunning = _isRunning;
     
         // Move
         _controller.Move(moveDir * (targetMoveSpeed * Time.deltaTime));
     }
-
-    private void HandleJumping()
+    
+    private void HandleJump()
     {
-        if (Input.GetButtonDown("Jump") && isGrounded)
+        if (isDashing) return;
+
+        // Update jump buffer timer
+        if (_jumpBufferCounter > 0f)
+        {
+            _jumpBufferCounter -= Time.deltaTime;
+        }
+    
+        // Handle jump if we have buffered input and either have coyote time or are grounded
+        if (_jumpBufferCounter > 0f && (_coyoteTimeCounter > 0f || isGrounded))
         {
             _velocity.y = Mathf.Sqrt(jumpForce * -2f * gravity);
+            _jumpBufferCounter = 0f;  // Reset jump buffer since we used it
+            _coyoteTimeCounter = 0f;  // Reset coyote time since we used it
         }
-        
+    
+        // Apply gravity
         _velocity.y += gravity * Time.deltaTime;
+    
+        // Move the character
         _controller.Move(_velocity * Time.deltaTime);
+    
+        // Update jumping state
         isJumping = _velocity.y > 0;
     }
     
@@ -150,7 +203,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // Start new dash
-        if (Input.GetKeyDown(KeyCode.LeftAlt) && _dashCooldownRemaining <= 0 && !isDashing)
+        if (_wantsToDash && _dashCooldownRemaining <= 0 && !isDashing)
         {
             StartDash();
         }
@@ -169,18 +222,16 @@ public class PlayerMovement : MonoBehaviour
         _dashCooldownRemaining = dashCooldown;
 
         // Use movement input if available, otherwise use forward direction
-        Vector3 inputDir = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical")).normalized;
-        if (inputDir.magnitude > 0.1f)
+        if (_moveInput.magnitude > 0.1f)
         {
-            _dashDirection = (GetMovementDirection() * inputDir.z + 
-                              Quaternion.Euler(0, 90, 0) * GetMovementDirection() * inputDir.x).normalized;
+            _dashDirection = (GetMovementDirection() * _moveInput.y + 
+                            Quaternion.Euler(0, 90, 0) * GetMovementDirection() * _moveInput.x).normalized;
         }
         else
         {
             _dashDirection = GetMovementDirection();
         }
 
-        // Optional: Add immunity frames or effects here
         _velocity.y = 0; // Zero out vertical velocity for a clean dash
     }
 
@@ -207,14 +258,24 @@ public class PlayerMovement : MonoBehaviour
     
     private void HandleGravity()
     {
-        // Gravity handling remains the same
+        if (isDashing) return;
+    
+        bool wasGrounded = isGrounded;
         isGrounded = _controller.isGrounded;
-        isFalling = _velocity.y < 0;
-        
-        if (isGrounded && _velocity.y < 0)
+    
+        if (isGrounded)
         {
-            _velocity.y = -2f;
+            _coyoteTimeCounter = coyoteTime;
         }
+        else if (wasGrounded) // Just left the ground
+        {
+            _coyoteTimeCounter = coyoteTime;
+        }
+        else
+        {
+            _coyoteTimeCounter -= Time.deltaTime;
+        }
+        // ...
     }
     
     public void SetVelocity(Vector3 newVelocity)
@@ -233,8 +294,6 @@ public class PlayerMovement : MonoBehaviour
     }
 
 #endregion Movement //---------------------------------------------------------------------------------------
-
-
 
 #region Camera //---------------------------------------------------------------------------------------
 
@@ -281,7 +340,7 @@ public class PlayerMovement : MonoBehaviour
     private void UpdateFov()
     {
         if (!virtualCamera) return;
-        float targetFov = isRunning ? baseFov * runFovMultiplier : baseFov;
+        float targetFov = isRunning || isDashing ? baseFov * runFovMultiplier : baseFov;
         
         virtualCamera.Lens.FieldOfView = Mathf.Lerp(virtualCamera.Lens.FieldOfView, targetFov, Time.deltaTime * 10f);
     }
@@ -293,24 +352,19 @@ public class PlayerMovement : MonoBehaviour
         return direction.normalized;
     }
 
-
     public Vector3 GetAimDirection()
     {
         if (!_panTilt) return Vector3.zero;
         return Quaternion.Euler(_panTilt.TiltAxis.Value, _panTilt.PanAxis.Value, 0) * Vector3.forward;
     }
-    
 
 #endregion Camera //---------------------------------------------------------------------------------------
 
-
-
-
 #if UNITY_EDITOR
-private void OnValidate()
-{
-    SetupFov();
-    SetupCameraRange();
-}
+    private void OnValidate()
+    {
+        SetupFov();
+        SetupCameraRange();
+    }
 #endif
 }

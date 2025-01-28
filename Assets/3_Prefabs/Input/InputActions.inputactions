@@ -33,6 +33,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "ShootSecond",
+                    "type": "Button",
+                    "id": "7f442063-60e3-4717-878c-e04fdc07c861",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "Interact",
                     "type": "Button",
                     "id": "04a477a3-a8b5-4207-986f-5b7c1458bfc2",
@@ -54,6 +63,15 @@
                     "name": "Crouch",
                     "type": "Button",
                     "id": "3a927e6f-52a3-4ed0-a76c-636b05763378",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Dash",
+                    "type": "Button",
+                    "id": "c08a182e-08f7-44f2-bc47-17135494d055",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -311,7 +329,7 @@
                 {
                     "name": "",
                     "id": "191c32e2-514e-4803-8224-d3b561ff13ca",
-                    "path": "<Gamepad>/buttonWest",
+                    "path": "<Gamepad>/rightTrigger",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Gamepad",
@@ -365,12 +383,23 @@
                 },
                 {
                     "name": "",
-                    "id": "d6c9f03b-732c-4ca2-bd14-655d39ca9d58",
-                    "path": "<Keyboard>/enter",
+                    "id": "105c146d-e424-4bb8-83bd-6684af0b2c06",
+                    "path": "<Gamepad>/leftTrigger",
                     "interactions": "",
                     "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "Shoot",
+                    "groups": ";Gamepad",
+                    "action": "ShootSecond",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d7366e1b-fb3f-4a4d-8238-496ef3869f8e",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "ShootSecond",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -459,6 +488,39 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Crouch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "828b0ca7-5ed4-4651-bbd1-f3fd8521ff33",
+                    "path": "<Keyboard>/leftCtrl",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Crouch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "6666c1fa-a83b-4311-a89e-6266d20492bd",
+                    "path": "<Gamepad>/buttonWest",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "Dash",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "7fa34b3c-ba60-4d04-8b58-3d16c3ae1b3e",
+                    "path": "<Keyboard>/leftAlt",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Dash",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

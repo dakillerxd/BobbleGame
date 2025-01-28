@@ -1666,9 +1666,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   walkSpeed: 9
+  canRun: 0
   runSpeed: 11
   jumpForce: 5
   gravity: -15
+  jumpBufferTime: 0.1
+  coyoteTime: 0.1
   dashSpeed: 50
   dashDuration: 0.2
   dashCooldown: 1
@@ -1738,6 +1741,10 @@ MonoBehaviour:
   nextBubbleScale: 0.2
   loadBubbleTime: 0.7
   gunAnimationTime: 0.3
+  shootBufferTime: 0.1
+  pulseBufferTime: 0.1
+  shootCooldown: 0.3
+  pulseCooldown: 0.3
   comboTimeWindow: 7
   maxCombo: 10
   comboBarDrainSpeed: 1
