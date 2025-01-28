@@ -156,9 +156,9 @@ public class UpdateGameText : MonoBehaviour
         activeAnimations.Clear();
     }
 
-    private void HandleGameStateChange(GameState newState)
+    private void HandleGameStateChange()
     {
-        if (newState == GameState.WaitingToStart)
+        if (GameManager.CurrentGameState == GameState.WaitingToStart)
         {
             foreach (var config in textConfigs)
             {

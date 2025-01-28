@@ -15,6 +15,12 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float runSpeed = 9f;
     [SerializeField] private float jumpForce = 5f;
     [SerializeField] private float gravity = -15f; // -9.81f;
+    
+    [Header("Dash Settings")]
+    [SerializeField] private float dashSpeed = 20f;
+    [SerializeField] private float dashDuration = 0.2f;
+    [SerializeField] private float dashCooldown = 1f;
+    [SerializeField] private AnimationCurve dashSpeedCurve = AnimationCurve.EaseInOut(0, 1, 1, 0);
 
     [Header("Camera Settings")]
     [Tooltip("The range of the horizontal axis.")]
@@ -36,10 +42,14 @@ public class PlayerMovement : MonoBehaviour
     private CinemachinePanTilt _panTilt;
     private Vector3 _velocity;
     private Vector3 _spawnPoint;
+    private float _dashTimeRemaining;
+    private float _dashCooldownRemaining;
+    private Vector3 _dashDirection;
     public bool isGrounded {get; private set;}
     public bool isRunning {get; private set;}
     public bool isJumping {get; private set;}
     public bool isFalling {get; private set;}
+    public bool isDashing {get; private set;}
 
     
     private void Awake()
@@ -51,22 +61,27 @@ public class PlayerMovement : MonoBehaviour
     }
     
     
-    private void Update()
-    {
-        HandleMovement();
-        HandleJumping();
-        HandleGravity();
-        UpdateFov();
-    }
-    
     private void OnEnable()
     {
-        GameManager.OnSessionStart.AddListener(MoveToSpawnPoint);
+        GameManager.OnGameStateChanged.AddListener(MoveToSpawnPoint);
     }
 
     private void OnDisable()
     {
-        GameManager.OnSessionStart.RemoveListener(MoveToSpawnPoint);
+        GameManager.OnGameStateChanged.RemoveListener(MoveToSpawnPoint);
+    }
+    
+    private void Update()
+    {
+        if (!isDashing)
+        {
+            HandleMovement();
+            HandleJumping();
+            HandleGravity();
+        }
+        
+        HandleDashing();
+        UpdateFov();
     }
     
     private void OnTriggerEnter(Collider other) 
@@ -77,6 +92,14 @@ public class PlayerMovement : MonoBehaviour
             GameManager.Instance?.PlayerDied();
             deathSfx?.Play(_audioSource);
             return;
+        }
+        
+        if (other.TryGetComponent(out BubbleObject bubbleObject))
+        {
+            if (isDashing)
+            {
+                bubbleObject.PopBubble();
+            }
         }
     }
     
@@ -116,6 +139,70 @@ public class PlayerMovement : MonoBehaviour
         _velocity.y += gravity * Time.deltaTime;
         _controller.Move(_velocity * Time.deltaTime);
         isJumping = _velocity.y > 0;
+    }
+    
+    private void HandleDashing()
+    {
+        // Update cooldown
+        if (_dashCooldownRemaining > 0)
+        {
+            _dashCooldownRemaining -= Time.deltaTime;
+        }
+
+        // Start new dash
+        if (Input.GetKeyDown(KeyCode.LeftAlt) && _dashCooldownRemaining <= 0 && !isDashing)
+        {
+            StartDash();
+        }
+
+        // Handle ongoing dash
+        if (isDashing)
+        {
+            UpdateDash();
+        }
+    }
+    
+    private void StartDash()
+    {
+        isDashing = true;
+        _dashTimeRemaining = dashDuration;
+        _dashCooldownRemaining = dashCooldown;
+
+        // Use movement input if available, otherwise use forward direction
+        Vector3 inputDir = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical")).normalized;
+        if (inputDir.magnitude > 0.1f)
+        {
+            _dashDirection = (GetMovementDirection() * inputDir.z + 
+                              Quaternion.Euler(0, 90, 0) * GetMovementDirection() * inputDir.x).normalized;
+        }
+        else
+        {
+            _dashDirection = GetMovementDirection();
+        }
+
+        // Optional: Add immunity frames or effects here
+        _velocity.y = 0; // Zero out vertical velocity for a clean dash
+    }
+
+    private void UpdateDash()
+    {
+        if (_dashTimeRemaining > 0)
+        {
+            // Calculate dash progress (0 to 1)
+            float dashProgress = 1 - (_dashTimeRemaining / dashDuration);
+            
+            // Use animation curve to control dash speed over time
+            float currentDashSpeed = dashSpeed * dashSpeedCurve.Evaluate(dashProgress);
+            
+            // Move the character
+            _controller.Move(_dashDirection * (currentDashSpeed * Time.deltaTime));
+            
+            _dashTimeRemaining -= Time.deltaTime;
+        }
+        else
+        {
+            isDashing = false;
+        }
     }
     
     private void HandleGravity()

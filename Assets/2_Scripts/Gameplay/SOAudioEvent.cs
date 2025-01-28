@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using CustomAttribute;
 using UnityEngine.Audio;
+using VInspector;
 
 
 [CreateAssetMenu(fileName = "AudioEvent", menuName = "SO Audio/Audio Event")]
@@ -9,15 +10,29 @@ public class SOAudioEvent : ScriptableObject
 {
     public AudioClip[] clips;
     public AudioMixerGroup mixerGroup;
-    [MinMaxRange(0f, 1f)] public RangedFloat volume;
-    [MinMaxRange(-3f, 3f)] public RangedFloat pitch;
-    [Range(-1f, 1f)] public float stereoPan;
-    [Range(0f, 1f)] public float spatialBlend; 
+    [MinMaxRange(0f, 1f)] public RangedFloat volume = 1f;
+    [MinMaxRange(-3f, 3f)] public RangedFloat pitch = 1f;
+    [Range(-1f, 1f)] public float stereoPan = 0f;
+    [Range(0f, 1f)] public float spatialBlend = 0f; 
     [Range(0f, 1.1f)] public float reverbZoneMix = 1f;
     public bool bypassEffects;
     public bool bypassListenerEffects;
     public bool bypassReverbZones;
     public bool loop;
+    
+
+    
+    [Header("3D Sound Settings")]
+    public bool set3DSettings = false;
+    [EnableIf("set3DSettings")]
+    [MinMaxRange(0f, 5f)] public float dopplerLevel = 1f; 
+    [MinMaxRange(0f, 360f)] public float spread = 0f; 
+    public AudioRolloffMode rolloffMode = AudioRolloffMode.Logarithmic;
+    [Min(0)] public float minDistance = 1f;
+    [Min(0)] public float maxDistance = 500f;
+    [EndIf]
+    
+    
 
 
     public void Play(AudioSource source)
@@ -25,7 +40,7 @@ public class SOAudioEvent : ScriptableObject
         if (clips.Length == 0) // Make sure there are clips
         {
             #if UNITY_EDITOR
-            // Debug.Log("No clips found");
+            Debug.Log("No clips found");
             #endif
             return;
         }
@@ -40,7 +55,7 @@ public class SOAudioEvent : ScriptableObject
         if (clips.Length == 0) // Make sure there are clips
         {
             #if UNITY_EDITOR
-            // Debug.Log("No clips found");
+            Debug.Log("No clips found");
             #endif
             return;
         }
@@ -95,6 +110,15 @@ public class SOAudioEvent : ScriptableObject
         source.bypassListenerEffects = bypassListenerEffects;
         source.bypassReverbZones = bypassReverbZones;
         source.loop = loop;
+
+        if (set3DSettings)
+        {
+            source.dopplerLevel = dopplerLevel;
+            source.spread = spread;
+            source.minDistance = minDistance;
+            source.maxDistance = maxDistance;
+            source.rolloffMode = rolloffMode;
+        }
     }
     
     

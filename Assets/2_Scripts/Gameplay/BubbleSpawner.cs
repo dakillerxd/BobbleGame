@@ -12,27 +12,31 @@ public enum SpawnShape
 [RequireComponent(typeof(AudioSource))]
 public class BubbleSpawner : MonoBehaviour
 {
-    [Foldout("Spawn Settings")] 
+    [Header("Spawn Settings")] 
     [SerializeField] private SpawnShape spawnShape = SpawnShape.Cube;
     [SerializeField] private float minDistanceBetweenBubbles = 0.5f;
     [SerializeField] private float maxDistanceBetweenBubbles = 1.0f;
-    [EndFoldout] 
-    
-    [Foldout("Shape Parameters")] 
+
+    [ShowIf("isCube")]
     [Header("Cube Settings")] 
     [SerializeField] private Vector3 cubeSize = new Vector3(15f, 5f, 15f);
-
+    [EndIf]
+    
+    [ShowIf("isSphere")]
     [Header("Sphere Settings")] 
     [SerializeField] private float sphereRadius = 3f;
-    [EndFoldout] 
+    [EndIf]
 
-    [Foldout("References")] 
+    [Header("References")] 
     [SerializeField] private SOBubbleManager bubbleManager;
     [SerializeField] private SOAudioEvent bubblesSpawnedSfx;
     [SerializeField] private  AudioSource audioSource;
-    [EndFoldout] 
     
     [SerializeField] [ReadOnly] private List<BubbleObject> spawnedBubbles = new List<BubbleObject>();
+
+    private bool isCube => spawnShape == SpawnShape.Cube;
+    private bool isSphere => spawnShape == SpawnShape.Sphere;
+    
 
     public void SpawnBubbles()
     {
@@ -63,6 +67,7 @@ public class BubbleSpawner : MonoBehaviour
 
     private void SpawnBubbles(bool clearExisting)
     {
+        
         if (!bubbleManager)
         {
             Debug.LogError("Bubble Manager not assigned!");
@@ -113,6 +118,7 @@ public class BubbleSpawner : MonoBehaviour
             spawnedBubbles.Add(bubble);
             newBubbleData.Add((position, validColor));
         }
+        
         bubblesSpawnedSfx.Play(audioSource);
     }
     

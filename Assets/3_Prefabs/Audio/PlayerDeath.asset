@@ -12,14 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2a624d22ac92d244b8b610c87a78af8, type: 3}
   m_Name: PlayerDeath
   m_EditorClassIdentifier: 
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: d082ae58f0533b747978c16de4da4c5e, type: 3}
   mixerGroup: {fileID: 6573020439172944572, guid: 01c289713e2dcb84394f3377bb29e428, type: 2}
   volume:
-    minValue: 1
-    maxValue: 1
+    minValue: 0.6
+    maxValue: 0.6
   pitch:
-    minValue: 1
-    maxValue: 1
+    minValue: 0.9
+    maxValue: 1.1
   stereoPan: 0
   spatialBlend: 0
   reverbZoneMix: 1

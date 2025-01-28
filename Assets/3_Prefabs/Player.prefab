@@ -1505,8 +1505,8 @@ GameObject:
   - component: {fileID: 3552524397716754400}
   - component: {fileID: 8097065142828954588}
   - component: {fileID: 561795473927122116}
-  - component: {fileID: 757380374071234127}
   - component: {fileID: 6710026791817536955}
+  - component: {fileID: 5262845416357249655}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -1665,10 +1665,55 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd4a35bcbde07e6448bf1534f7191cae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  walkSpeed: 6
-  runSpeed: 9
+  walkSpeed: 9
+  runSpeed: 11
   jumpForce: 5
   gravity: -15
+  dashSpeed: 50
+  dashDuration: 0.2
+  dashCooldown: 1
+  dashSpeedCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 6.9611387
+      outSlope: 6.9611387
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.08025266
+      value: 0.5586499
+      inSlope: 1.7130581
+      outSlope: 1.7130581
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.036843456
+    - serializedVersion: 3
+      time: 0.46084684
+      value: 0.89734185
+      inSlope: 0.41704735
+      outSlope: 0.41704735
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.15137967
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.1904063
+      outSlope: 0.1904063
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   panAxisRange: {x: -180, y: 180}
   tiltAxisRange: {x: -70, y: 70}
   baseFov: 60
@@ -1676,18 +1721,6 @@ MonoBehaviour:
   inputReader: {fileID: 11400000, guid: bc4b1fd8e08cece4899198f6f0f7ad7f, type: 2}
   virtualCamera: {fileID: 5943902487629072465}
   deathSfx: {fileID: 11400000, guid: 7770827e3215e784998dee387df9aff4, type: 2}
---- !u!114 &757380374071234127
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8593466462991696684}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 88c58cfcf049b534dbd7fcb558bb6644, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &6710026791817536955
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1700,9 +1733,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 272d53aa7aa51034abc2a8e97e959d42, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  shotForce: 15
   currentBubbleScale: 0.6
   nextBubbleScale: 0.2
-  shotForce: 15
   loadBubbleTime: 0.7
   gunAnimationTime: 0.3
   comboTimeWindow: 7
@@ -1724,6 +1757,21 @@ MonoBehaviour:
   nextBubbleTransform: {fileID: 8282509060131599836}
   bubbleManager: {fileID: 11400000, guid: ecac66a561a8fb64480f72c03a544133, type: 2}
   gunShotSfx: {fileID: 11400000, guid: e70df51a782bb684aa0aa54817775825, type: 2}
+--- !u!114 &5262845416357249655
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8593466462991696684}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88c58cfcf049b534dbd7fcb558bb6644, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  speedBoostMultiplier: 1.5
+  <isSpeedBoosted>k__BackingField: 0
+  <isSuperBubble>k__BackingField: 0
 --- !u!1 &8774800701445099001
 GameObject:
   m_ObjectHideFlags: 0

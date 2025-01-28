@@ -10,31 +10,31 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c2a624d22ac92d244b8b610c87a78af8, type: 3}
-  m_Name: BubbleSpawnerSpawn
+  m_Name: SessionWin
   m_EditorClassIdentifier: 
   clips:
-  - {fileID: 8300000, guid: 7a3980a309343864b80f38221d642dfb, type: 3}
-  - {fileID: 8300000, guid: 592330ddd357a2344a661b0ef93c935f, type: 3}
-  - {fileID: 8300000, guid: a1e11ffca2f6f624c827cc425fc7c8ae, type: 3}
-  - {fileID: 8300000, guid: adbfdfffc769eee4b809115a71a35632, type: 3}
-  - {fileID: 8300000, guid: 1d4e74dd02d98c84aaf658fd564a8d1c, type: 3}
+  - {fileID: 8300000, guid: 11cdfbdf1f0616743ada9d2ac2a41570, type: 3}
+  - {fileID: 8300000, guid: 8966cdee5d58e214886e2cf071b916fd, type: 3}
+  - {fileID: 8300000, guid: 2b24a195832b5834f87d97ebfba8bbb5, type: 3}
+  - {fileID: 8300000, guid: 92f747aac60d1ac46a96a61ef930cc71, type: 3}
+  - {fileID: 8300000, guid: 045cb59d4e46d6d408648f21cfff20fa, type: 3}
   mixerGroup: {fileID: 6573020439172944572, guid: 01c289713e2dcb84394f3377bb29e428, type: 2}
   volume:
-    minValue: 1
-    maxValue: 1
+    minValue: 0.5
+    maxValue: 0.5
   pitch:
     minValue: 0.9
     maxValue: 1.1
   stereoPan: 0
-  spatialBlend: 0.8
+  spatialBlend: 0
   reverbZoneMix: 1
   bypassEffects: 0
   bypassListenerEffects: 0
   bypassReverbZones: 0
   loop: 0
-  set3DSettings: 1
+  set3DSettings: 0
   dopplerLevel: 1
-  spread: 1
+  spread: 0
   rolloffMode: 0
-  minDistance: 1
-  maxDistance: 500
+  minDistance: 0
+  maxDistance: 0

@@ -4,6 +4,7 @@ using UnityEngine.Events;
 using UnityEngine.Serialization;
 using VInspector;
 
+
 public enum GameState
 {
     WaitingToStart,
@@ -11,6 +12,7 @@ public enum GameState
     GameOver
 }
 
+[RequireComponent(typeof(AudioSource))]
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
@@ -18,6 +20,11 @@ public class GameManager : MonoBehaviour
     [Header("Settings")]
     [SerializeField] private SOGameModeConfig defaultSoGameMode;
     [SerializeField] private SOGameModeConfig[] availableGameModes;
+
+    [Header("References")] 
+    [SerializeField] private SOAudioEvent sessionStartSfx;
+    [SerializeField] private SOAudioEvent sessionWinSfx;
+    [SerializeField] private SOAudioEvent sessionLoseSfx;
     
     public static GameState CurrentGameState { get; private set; } = GameState.WaitingToStart;
     public static int CurrentScore { get; private set; }
@@ -30,13 +37,12 @@ public class GameManager : MonoBehaviour
     public static List<BubbleSpawner> BubbleSpawners { get; private set; } = new List<BubbleSpawner>();
     public static SOGameModeConfig CurrentGameMode { get; private set; }
     
-    public static UnityEvent<GameState> OnGameStateChanged = new UnityEvent<GameState>();
+    public static UnityEvent OnGameStateChanged = new UnityEvent();
+    public static UnityEvent<SOGameModeConfig> OnGameModeChanged = new UnityEvent<SOGameModeConfig>();
     public static UnityEvent<int> OnScoreUpdate = new UnityEvent<int>();
     public static UnityEvent<int> OnBubbleLeftUpdate = new UnityEvent<int>();
     public static UnityEvent<float> OnTimeUpdate = new UnityEvent<float>();
     public static UnityEvent<int> OnWaveUpdate = new UnityEvent<int>();
-    public static UnityEvent OnSessionStart = new UnityEvent();
-    public static UnityEvent<SOGameModeConfig> OnGameModeChanged = new UnityEvent<SOGameModeConfig>();
     public static UnityEvent<int> OnDeathUpdate = new UnityEvent<int>();
     public static UnityEvent<float> OnWaveTimerUpdate = new UnityEvent<float>();
     public static UnityEvent<int> OnWaveScoreUpdate = new UnityEvent<int>();
@@ -45,6 +51,7 @@ public class GameManager : MonoBehaviour
     private List<BubbleSpawner> _previousWaveSpawners = new List<BubbleSpawner>();
     private float _waveSpawnTimer = 0f;
     private bool _isWaitingForNextWave = false;
+    private AudioSource _audioSource;
 
 
 
@@ -59,6 +66,8 @@ public class GameManager : MonoBehaviour
             Instance = this;
             SetGameMode(defaultSoGameMode);
         }
+        
+        _audioSource = GetComponent<AudioSource>();
     }
     
     
@@ -67,6 +76,11 @@ public class GameManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F1))
         {
             StartNewSession();
+        }
+        
+        if (Input.GetKeyDown(KeyCode.F2))
+        {
+            ResetSession();
         }
         
         if (CurrentGameState == GameState.Playing)
@@ -98,7 +112,7 @@ public class GameManager : MonoBehaviour
         if (CurrentGameState != newState)
         {
             CurrentGameState = newState;
-            OnGameStateChanged?.Invoke(CurrentGameState);
+            OnGameStateChanged?.Invoke();
         }
     }
 
@@ -206,11 +220,17 @@ public class GameManager : MonoBehaviour
     
     private void HandleGameEnd(bool isWin)
     {
+        
         Debug.Log(isWin ? "Game Won!" : "Game Lost!");
         SetGameState(GameState.GameOver);
+        ResetSession();
         if (!isWin)
         {
-            ResetSession();
+            sessionLoseSfx.Play(_audioSource);
+        }
+        else
+        {
+            sessionWinSfx.Play(_audioSource);
         }
     }
     
@@ -262,7 +282,8 @@ public class GameManager : MonoBehaviour
         FindAllBubblesInLevel();
         
         SetGameState(GameState.Playing);
-        OnSessionStart?.Invoke();
+        sessionStartSfx.Play(_audioSource);
+        
     }
     
 #endregion Session Management // -------------------------------------------------------------------------------------
@@ -313,15 +334,5 @@ public class GameManager : MonoBehaviour
     
 #endregion Bubble Management // -------------------------------------------------------------------------------------
     
-
-#if UNITY_EDITOR
-    private void OnValidate()
-    {
-        if (defaultSoGameMode == null)
-        {
-            Debug.LogWarning("Default GameModeConfigSO is not assigned!");
-        }
-    }
-#endif
 
 }
