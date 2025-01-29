@@ -14,31 +14,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   modeName: Survivel
   description: 
-  isCountUp: 1
+  timerMode: 1
+  targetTime: 60
+  bubbleTimeWorth: 5
+  warningThreshold: 0.25
+  normalTimerColor: {r: 1, g: 1, b: 1, a: 1}
+  warningTimerColor: {r: 1, g: 0, b: 0, a: 1}
   bubbleScoreWorth: 1
   scoreMultiplier: 1
   waveInterval: 5
-  enableWaveScaling: 1
-  initialBubblesPerWave: 5
-  bubbleScaling: 1.5
-  maxBubblesPerWave: 20
-  minBubblesPerWave: 3
-  enableSpawnerScaling: 1
+  spawnerSelectionMode: 2
+  spawnersPerWave: 1
+  allowConsecutiveReuse: 1
   initialSpawnersPerWave: 1
   spawnerScaling: 1.5
   maxSpawnersPerWave: 5
   minSpawnersPerWave: 1
-  enableTimeBoosts: 0
-  timeBoostAmount: 5
-  scoreRequiredForTimeBoost: 1000
-  spawnerSelectionMode: 3
-  spawnersPerWave: 1
-  allowConsecutiveReuse: 1
-  maxBubbleAmount: 5
-  minBubbleAmount: 1
   sameColorSpawnChance: 0.6
+  enableBubbleScaling: 1
+  bubbleRange: {x: 3, y: 10}
+  initialBubbleCount: 3
+  maxBubbleCount: 5
+  bubbleScaling: 1.5
   useTimeForWinCondition: 0
-  targetTime: 60
   enableScoreCondition: 0
   targetScore: 1000
   enableWaveCondition: 0

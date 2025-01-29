@@ -86,7 +86,7 @@ public class BubbleObject : BubbleBase
     private void UpdateTouchingSameColorBubbles()
     {
         touchingSameColorBubbles.Clear();
-    
+
         foreach (BubbleObject bubble in touchingBubbles)
         {
             if (bubble != null && bubble.BubbleColor() == BubbleColor())
@@ -96,10 +96,10 @@ public class BubbleObject : BubbleBase
         }
 
         bool shouldPop = wasShot || touchingSameColorBubbles.Any(bubble => bubble.wasShot);
-    
+
         if (shouldPop && touchingSameColorBubbles.Count >= 2)
         {
-            // Pop connected bubbles and award points
+            // Pop connected bubbles and award points/time
             foreach (BubbleObject bubble in touchingSameColorBubbles)
             {
                 if (bubble != null)
@@ -107,15 +107,17 @@ public class BubbleObject : BubbleBase
                     if (!bubble.wasShot)
                     {
                         AwardPoints();
+                        GameManager.Instance.UpdateTimeFromBubblePop();
                     }
                     bubble.PopBubble(Random.Range(0, 0.2f));
                 }
             }
-        
-            // Pop this bubble and award points if not shot
+    
+            // Pop this bubble and award points/time if not shot
             if (!wasShot)
             {
                 AwardPoints();
+                GameManager.Instance.UpdateTimeFromBubblePop();
             }
 
             // Notify the player gun about popped bubbles

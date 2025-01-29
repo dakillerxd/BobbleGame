@@ -65,58 +65,86 @@ public class UpdateGameText : MonoBehaviour
 
     private void RegisterEventListeners()
     {
-        foreach (var config in textConfigs)
+    foreach (var config in textConfigs)
+    {
+        switch (config.type)
         {
-            switch (config.type)
-            {
-                case TextType.Score:
-                    GameManager.OnScoreUpdate.AddListener((score) => 
-                        UpdateText(config, FormatNumber(score, config)));
-                    break;
-                    
-                case TextType.BubblesLeft:
-                    GameManager.OnBubbleLeftUpdate.AddListener((bubbles) => 
-                        UpdateText(config, FormatNumber(bubbles, config)));
-                    break;
-                    
-                case TextType.Time:
-                    GameManager.OnTimeUpdate.AddListener((time) => 
-                        UpdateText(config, FormatTime(time, config)));
-                    break;
-                    
-                case TextType.Wave:
-                    GameManager.OnWaveUpdate.AddListener((wave) => 
-                        UpdateText(config, FormatNumber(wave, config)));
-                    break;
-                    
-                case TextType.GameModeName:
-                    GameManager.OnGameModeChanged.AddListener((gameMode) => 
-                        UpdateText(config, gameMode.ModeName));
-                    break;
-
-                case TextType.Deaths:
-                    GameManager.OnDeathUpdate.AddListener((deaths) =>
-                        UpdateText(config, FormatNumber(deaths, config)));
-                    break;
-
-                case TextType.WaveTimer:
-                    GameManager.OnWaveTimerUpdate.AddListener((timer) =>
-                        UpdateText(config, FormatTime(timer, config)));
-                    break;
-
-                case TextType.WaveScore:
-                    GameManager.OnWaveScoreUpdate.AddListener((waveScore) =>
-                        UpdateText(config, FormatNumber(waveScore, config)));
-                    break;
-                    
-                case TextType.Custom:
-                    if (!string.IsNullOrEmpty(config.customEventName))
+            case TextType.Score:
+                GameManager.OnScoreUpdate.AddListener((score) => 
+                    UpdateText(config, FormatNumber(score, config)));
+                break;
+                
+            case TextType.BubblesLeft:
+                GameManager.OnBubbleLeftUpdate.AddListener((bubbles) => 
+                    UpdateText(config, FormatNumber(bubbles, config)));
+                break;
+                
+            case TextType.Time:
+                GameManager.OnTimeUpdate.AddListener((time) =>
+                {
+                    UpdateText(config, FormatTime(time, config));
+                    // Update color separately for timer texts
+                    if (GameManager.CurrentGameMode != null && 
+                        GameManager.CurrentGameMode.TimerMode != TimerMode.Off)
                     {
-                        customEvents[config.customEventName] = (value) => UpdateText(config, value);
+                        foreach (TextMeshPro text in config.texts)
+                        {
+                            if (text != null)
+                            {
+                                text.color = GameManager.CurrentGameMode.GetTimerColor(time);
+                            }
+                        }
                     }
-                    break;
-            }
+                });
+                break;
+                
+            case TextType.Wave:
+                GameManager.OnWaveUpdate.AddListener((wave) => 
+                    UpdateText(config, FormatNumber(wave, config)));
+                break;
+                
+            case TextType.GameModeName:
+                GameManager.OnGameModeChanged.AddListener((gameMode) => 
+                    UpdateText(config, gameMode.ModeName));
+                break;
+
+            case TextType.Deaths:
+                GameManager.OnDeathUpdate.AddListener((deaths) =>
+                    UpdateText(config, FormatNumber(deaths, config)));
+                break;
+
+            case TextType.WaveTimer:
+                GameManager.OnWaveTimerUpdate.AddListener((timer) =>
+                {
+                    UpdateText(config, FormatTime(timer, config));
+                    // Update color separately for timer texts
+                    if (GameManager.CurrentGameMode != null && 
+                        GameManager.CurrentGameMode.TimerMode != TimerMode.Off)
+                    {
+                        foreach (TextMeshPro text in config.texts)
+                        {
+                            if (text != null)
+                            {
+                                text.color = GameManager.CurrentGameMode.GetTimerColor(timer);
+                            }
+                        }
+                    }
+                });
+                break;
+
+            case TextType.WaveScore:
+                GameManager.OnWaveScoreUpdate.AddListener((waveScore) =>
+                    UpdateText(config, FormatNumber(waveScore, config)));
+                break;
+                
+            case TextType.Custom:
+                if (!string.IsNullOrEmpty(config.customEventName))
+                {
+                    customEvents[config.customEventName] = (value) => UpdateText(config, value);
+                }
+                break;
         }
+    }
     }
 
     private void UpdateGameModeText()
@@ -178,7 +206,7 @@ public class UpdateGameText : MonoBehaviour
                         if (GameManager.CurrentGameMode != null)
                         {
                             float initialTime = config.type == TextType.Time ?
-                                (GameManager.CurrentGameMode.IsCountUp ? 0 : GameManager.CurrentGameMode.TargetTime) :
+                                (GameManager.CurrentGameMode.TimerMode == TimerMode.CountUp ? 0 : GameManager.CurrentGameMode.TargetTime) :
                                 GameManager.CurrentGameMode.TimeToCompleteWave;
                             UpdateText(config, FormatTime(initialTime, config));
                         }
@@ -200,9 +228,21 @@ public class UpdateGameText : MonoBehaviour
         foreach (TextMeshPro text in config.texts)
         {
             if (text == null) continue;
-            
+        
             text.text = formattedText;
-            
+        
+            // Update timer color if this is a timer text
+            if ((config.type == TextType.Time || config.type == TextType.WaveTimer) && 
+                GameManager.CurrentGameMode != null && 
+                GameManager.CurrentGameMode.TimerMode != TimerMode.Off)
+            {
+                float currentTime = config.type == TextType.Time ? 
+                    GameManager.CurrentTime : 
+                    GameManager.CurrentWaveTimer;
+                
+                text.color = GameManager.CurrentGameMode.GetTimerColor(currentTime);
+            }
+        
             if (config.enableAnimation)
             {
                 if (activeAnimations.TryGetValue(config, out var activeSequence))
@@ -217,11 +257,12 @@ public class UpdateGameText : MonoBehaviour
                         duration: config.animationDuration, 
                         frequency: config.animationFrequency
                     ));
-                
+            
                 activeAnimations[config] = sequence;
             }
         }
     }
+
 
     private string FormatTime(float time, TextConfig config)
     {

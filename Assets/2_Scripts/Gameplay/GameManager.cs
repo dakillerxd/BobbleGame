@@ -47,7 +47,7 @@ public class GameManager : MonoBehaviour
     public static UnityEvent<float> OnWaveTimerUpdate = new UnityEvent<float>();
     public static UnityEvent<int> OnWaveScoreUpdate = new UnityEvent<int>();
 
-    private int _lastScoreCheckForTimeBoost;
+
     private List<BubbleSpawner> _previousWaveSpawners = new List<BubbleSpawner>();
     private float _waveSpawnTimer = 0f;
     private bool _isWaitingForNextWave = false;
@@ -180,7 +180,9 @@ public class GameManager : MonoBehaviour
     
     private void UpdateGameTime()
     {
-        float deltaTime = CurrentGameMode.IsCountUp ? Time.deltaTime : -Time.deltaTime;
+        if (CurrentGameMode.TimerMode == TimerMode.Off) return;
+    
+        float deltaTime = CurrentGameMode.TimerMode == TimerMode.CountUp ? Time.deltaTime : -Time.deltaTime;
         CurrentTime += deltaTime;
         OnTimeUpdate?.Invoke(CurrentTime);
     }
@@ -197,25 +199,14 @@ public class GameManager : MonoBehaviour
     public void UpdateScore(int score)
     {
         int multipliedScore = Mathf.RoundToInt(score * CurrentGameMode.ScoreMultiplier);
-        
+
         // Update total score
         CurrentScore += multipliedScore;
         OnScoreUpdate?.Invoke(CurrentScore);
-        
+
         // Update wave score
         CurrentWaveScore += multipliedScore;
         OnWaveScoreUpdate?.Invoke(CurrentWaveScore);
-        
-        if (CurrentGameMode.EnableTimeBoosts)
-        {
-            int scoreDifference = CurrentScore - _lastScoreCheckForTimeBoost;
-            if (scoreDifference >= CurrentGameMode.ScoreRequiredForTimeBoost)
-            {
-                CurrentTime += CurrentGameMode.TimeBoostAmount;
-                _lastScoreCheckForTimeBoost = CurrentScore;
-                OnTimeUpdate?.Invoke(CurrentTime);
-            }
-        }
     }
     
     private void HandleGameEnd(bool isWin)
@@ -243,12 +234,11 @@ public class GameManager : MonoBehaviour
     private void ResetSession()
     {
         CurrentScore = 0;
-        CurrentTime = CurrentGameMode.IsCountUp ? 0 : CurrentGameMode.TargetTime;
+        CurrentTime = CurrentGameMode.TimerMode == TimerMode.CountDown ? CurrentGameMode.TargetTime : 0;
         CurrentWave = 0;
         CurrentDeaths = 0;
         CurrentWaveTimer = CurrentGameMode.TimeToCompleteWave;
         CurrentWaveScore = 0;
-        _lastScoreCheckForTimeBoost = 0;
         _isWaitingForNextWave = false;
         _waveSpawnTimer = 0f;
         
@@ -331,6 +321,20 @@ public class GameManager : MonoBehaviour
             spawner.SpawnBubbles();
         }
     }
+    
+    public void UpdateTimeFromBubblePop()
+    {
+        if (CurrentGameMode.TimerMode != TimerMode.Off)
+        {
+            float timeChange = CurrentGameMode.TimerMode == TimerMode.CountUp ? 
+                CurrentGameMode.BubbleTimeWorth : 
+                -CurrentGameMode.BubbleTimeWorth;
+            
+            CurrentTime += timeChange;
+            OnTimeUpdate?.Invoke(CurrentTime);
+        }
+    }
+
     
 #endregion Bubble Management // -------------------------------------------------------------------------------------
     
