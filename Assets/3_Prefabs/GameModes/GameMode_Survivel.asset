@@ -16,7 +16,7 @@ MonoBehaviour:
   description: 
   timerMode: 1
   targetTime: 60
-  bubbleTimeWorth: 5
+  bubbleTimeWorth: 1
   warningThreshold: 0.25
   normalTimerColor: {r: 1, g: 1, b: 1, a: 1}
   warningTimerColor: {r: 1, g: 0, b: 0, a: 1}
@@ -27,14 +27,14 @@ MonoBehaviour:
   spawnersPerWave: 1
   allowConsecutiveReuse: 1
   initialSpawnersPerWave: 1
-  spawnerScaling: 1.5
+  spawnerScaling: 1.2
   maxSpawnersPerWave: 5
   minSpawnersPerWave: 1
   sameColorSpawnChance: 0.6
   enableBubbleScaling: 1
   bubbleRange: {x: 3, y: 10}
   initialBubbleCount: 3
-  maxBubbleCount: 5
+  maxBubbleCount: 50
   bubbleScaling: 1.5
   useTimeForWinCondition: 0
   enableScoreCondition: 0

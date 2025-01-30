@@ -102,11 +102,11 @@ public class SOGameModeConfig : ScriptableObject
 
     [ShowIf("enableBubbleScaling")]
     [Tooltip("Starting number of bubbles in the first wave")]
-    [SerializeField] private int initialBubbleCount = 3;
+    [SerializeField] [Min(0)] private int initialBubbleCount = 3;
     [Tooltip("Maximum number of bubbles allowed in any wave")]
     [SerializeField] private int maxBubbleCount = 50;
     [Tooltip("How much to increase bubble count each wave (multiplier)")]
-    [SerializeField] private float bubbleScaling = 1.5f;
+    [SerializeField] [Min(1)] private float bubbleScaling = 1.5f;
     [EndIf]
     
 
@@ -191,14 +191,18 @@ public class SOGameModeConfig : ScriptableObject
     public bool EnableMaxBubblesCondition => enableMaxBubblesCondition;
     public int MaxActiveBubbles => maxActiveBubbles;
     public bool IsWaveBasedMode => spawnerSelectionMode == SpawnerSelectionMode.WaveBased;
+    public bool EnableBubbleScaling => enableBubbleScaling;
     public int MinBubbleAmount 
     {
         get
         {
             if (!enableBubbleScaling) return bubbleRange.x;
         
-            int currentWave = GameManager.CurrentWave;
-            float scaledAmount = initialBubbleCount * Mathf.Pow(bubbleScaling, currentWave);
+            // Wave 1 use initial count
+            if (GameManager.CurrentWave == 1) return initialBubbleCount;
+        
+            // Calculate scaled amount based on wave number (subtract 1 since we start from wave 1)
+            float scaledAmount = initialBubbleCount * Mathf.Pow(bubbleScaling, GameManager.CurrentWave - 1);
             return Mathf.Min(Mathf.RoundToInt(scaledAmount), maxBubbleCount);
         }
     }
@@ -208,10 +212,9 @@ public class SOGameModeConfig : ScriptableObject
         get
         {
             if (!enableBubbleScaling) return bubbleRange.y;
-            return MinBubbleAmount; // Use the same scaled value
+            return MinBubbleAmount; // When scaling is enabled, use exact scaled amount
         }
     }
-
 
 
     #region Spawner Management // -------------------------------------------------------------------------
@@ -262,7 +265,6 @@ public class SOGameModeConfig : ScriptableObject
     }
 
     #endregion Spawner Management // -------------------------------------------------------------------------
-
     
     
     #region Game State Management // -------------------------------------------------------------------------

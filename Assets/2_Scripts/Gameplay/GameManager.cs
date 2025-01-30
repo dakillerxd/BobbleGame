@@ -186,6 +186,13 @@ public class GameManager : MonoBehaviour
         CurrentTime += deltaTime;
         OnTimeUpdate?.Invoke(CurrentTime);
     }
+    
+    private void UpdateWaveTime()
+    {
+        CurrentWaveTimer += CurrentGameMode.BubbleTimeWorth;
+        OnWaveTimerUpdate?.Invoke(CurrentWaveTimer);
+    }
+
 
     private void CheckEndConditions()
     {
@@ -235,7 +242,7 @@ public class GameManager : MonoBehaviour
     {
         CurrentScore = 0;
         CurrentTime = CurrentGameMode.TimerMode == TimerMode.CountDown ? CurrentGameMode.TargetTime : 0;
-        CurrentWave = 0;
+        CurrentWave = 1;
         CurrentDeaths = 0;
         CurrentWaveTimer = CurrentGameMode.TimeToCompleteWave;
         CurrentWaveScore = 0;
@@ -298,11 +305,17 @@ public class GameManager : MonoBehaviour
 
     public void OnBubblePopped(BubbleObject bubble)
     {
-        
         if (CurrentGameState != GameState.Playing) return;
-            
+        
         BubblesLeft.Remove(bubble);
         OnBubbleLeftUpdate?.Invoke(BubblesLeft.Count);
+
+        // Award points and update time if bubble wasn't shot
+        if (!bubble.WasShot)
+        {
+            UpdateScore(CurrentGameMode.BubbleScoreWorth);
+            UpdateWaveTime();
+        }
 
         if (BubblesLeft.Count == 0)
         {
@@ -322,19 +335,6 @@ public class GameManager : MonoBehaviour
         }
     }
     
-    public void UpdateTimeFromBubblePop()
-    {
-        if (CurrentGameMode.TimerMode != TimerMode.Off)
-        {
-            float timeChange = CurrentGameMode.TimerMode == TimerMode.CountUp ? 
-                CurrentGameMode.BubbleTimeWorth : 
-                -CurrentGameMode.BubbleTimeWorth;
-            
-            CurrentTime += timeChange;
-            OnTimeUpdate?.Invoke(CurrentTime);
-        }
-    }
-
     
 #endregion Bubble Management // -------------------------------------------------------------------------------------
     

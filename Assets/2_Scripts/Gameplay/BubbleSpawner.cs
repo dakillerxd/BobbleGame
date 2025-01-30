@@ -123,45 +123,67 @@ public class BubbleSpawner : MonoBehaviour
     }
     
     
-    private Vector3[] GenerateConnectedPositions(Vector3[] existingPositions)
+   private Vector3[] GenerateConnectedPositions(Vector3[] existingPositions)
+{
+    // Get current total of existing bubbles
+    int existingCount = existingPositions?.Length ?? 0;
+
+    // Get the scaled amount for this wave while respecting max
+    int maxAllowed = GameManager.CurrentGameMode.MaxBubbleAmount;
+    int spaceRemaining = Mathf.Max(0, maxAllowed - existingCount);
+    
+    // Get the spawn range for this wave
+    int minSpawn = Mathf.Min(GameManager.CurrentGameMode.MinBubbleAmount, spaceRemaining);
+    int maxSpawn = Mathf.Min(GameManager.CurrentGameMode.MinBubbleAmount, spaceRemaining);
+    
+    // If we're doing wave-based scaling, use exact amount
+    if (GameManager.CurrentGameMode.EnableBubbleScaling)
     {
-        int targetBubbleCount = Random.Range(
-            GameManager.CurrentGameMode.MinBubbleAmount, 
-            GameManager.CurrentGameMode.MaxBubbleAmount + 1
-        );
-        
-        List<Vector3> positions = new List<Vector3>();
-    
-        if (existingPositions != null && existingPositions.Length > 0)
-        {
-            positions.AddRange(existingPositions);
-        }
-        else
-        {
-            positions.Add(GetRandomPositionInShape());
-        }
-
-        int maxAttempts = 1000;
-        while (positions.Count < targetBubbleCount + (existingPositions?.Length ?? 0) && maxAttempts > 0)
-        {
-            Vector3 anchorPosition = positions[Random.Range(0, positions.Count)];
-            Vector3? newPosition = FindValidConnectedPosition(anchorPosition, positions);
-        
-            if (newPosition.HasValue)
-            {
-                positions.Add(newPosition.Value);
-            }
-        
-            maxAttempts--;
-        }
-
-        if (existingPositions != null)
-        {
-            return positions.Skip(existingPositions.Length).ToArray();
-        }
-    
-        return positions.ToArray();
+        minSpawn = maxSpawn; // Force exact amount when scaling
     }
+    
+    // Get target count within our limits
+    int targetCount = Random.Range(minSpawn, maxSpawn + 1);
+    
+    List<Vector3> positions = new List<Vector3>();
+    
+    // Add existing positions if any
+    if (existingPositions != null && existingPositions.Length > 0)
+    {
+        positions.AddRange(existingPositions);
+    }
+    else if (targetCount > 0)
+    {
+        // Only add starting position if we need to spawn bubbles
+        positions.Add(GetRandomPositionInShape());
+    }
+
+    // Track how many new positions we need
+    int remainingToSpawn = targetCount;
+    int maxAttempts = 1000; // Prevent infinite loops
+    
+    while (remainingToSpawn > 0 && maxAttempts > 0)
+    {
+        Vector3 anchorPosition = positions[Random.Range(0, positions.Count)];
+        Vector3? newPosition = FindValidConnectedPosition(anchorPosition, positions);
+    
+        if (newPosition.HasValue)
+        {
+            positions.Add(newPosition.Value);
+            remainingToSpawn--;
+        }
+    
+        maxAttempts--;
+    }
+
+    // Return only the new positions, not the existing ones
+    if (existingPositions != null)
+    {
+        return positions.Skip(existingPositions.Length).ToArray();
+    }
+
+    return positions.ToArray();
+}
 
     private Vector3? FindValidConnectedPosition(Vector3 anchorPosition, List<Vector3> existingPositions)
     {

@@ -13,6 +13,7 @@ public class BubbleObject : BubbleBase
     [SerializeField] [ReadOnly] private List<BubbleObject> touchingSameColorBubbles = new List<BubbleObject>();
     
     private Rigidbody _rigidbody;
+    public bool WasShot => wasShot;
     
     protected override void Awake()
     {
@@ -51,7 +52,6 @@ public class BubbleObject : BubbleBase
         }
     }
     
-
 
     
     private void OnTriggerEnter(Collider other) 
@@ -99,27 +99,15 @@ public class BubbleObject : BubbleBase
 
         if (shouldPop && touchingSameColorBubbles.Count >= 2)
         {
-            // Pop connected bubbles and award points/time
+            // Pop connected bubbles
             foreach (BubbleObject bubble in touchingSameColorBubbles)
             {
                 if (bubble != null)
                 {
-                    if (!bubble.wasShot)
-                    {
-                        AwardPoints();
-                        GameManager.Instance.UpdateTimeFromBubblePop();
-                    }
                     bubble.PopBubble(Random.Range(0, 0.2f));
                 }
             }
-    
-            // Pop this bubble and award points/time if not shot
-            if (!wasShot)
-            {
-                AwardPoints();
-                GameManager.Instance.UpdateTimeFromBubblePop();
-            }
-
+        
             // Notify the player gun about popped bubbles
             if (PlayerGun != null)
             {
@@ -131,13 +119,6 @@ public class BubbleObject : BubbleBase
     }
     
     
-    private void AwardPoints()
-    {
-        if (GameManager.Instance == null || GameManager.CurrentGameMode == null) return;
-
-        int score = Mathf.RoundToInt(GameManager.CurrentGameMode.BubbleScoreWorth * GameManager.CurrentGameMode.ScoreMultiplier);
-        GameManager.Instance.UpdateScore(score);
-    }
     
     
     private void CleanLists()
@@ -150,12 +131,5 @@ public class BubbleObject : BubbleBase
     {
         wasShot = true;
     }
-
-    public void SetFrozenState(bool state)
-    {
-        _rigidbody.constraints = state ? RigidbodyConstraints.FreezeAll : RigidbodyConstraints.None;
-        _rigidbody.useGravity = !state;
-    }
     
-
 }
