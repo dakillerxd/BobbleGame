@@ -9,40 +9,34 @@ using VInspector;
 [RequireComponent(typeof(AudioSource))]
 [RequireComponent(typeof(PlayerPowerUps))]
 [RequireComponent(typeof(PlayerGun))]
+[RequireComponent(typeof(PlayerCamera))]
 public class PlayerMovement : MonoBehaviour
 {
-    [Header("Movement Settings")]
+    [Header("Movement")]
     [SerializeField] private float walkSpeed = 9f;
     [SerializeField] private bool canRun = false;
     [ShowIf("canRun")][SerializeField] private float runSpeed = 11f;[EndIf]
-    [SerializeField] private float jumpForce = 5f;
     [SerializeField] private float gravity = -15f;
+    
+    [Header("Jump")]
+    [SerializeField] private float jumpForce = 5f;
     [SerializeField] private float jumpBufferTime = 0.1f;
     [SerializeField] private float coyoteTime = 0.1f;
     
-    [Header("Dash Settings")]
+    [Header("Dash")]
     [SerializeField] private float dashSpeed = 50f;
     [SerializeField] private float dashDuration = 0.2f;
     [SerializeField] private float dashCooldown = 1f;
     [SerializeField] private AnimationCurve dashSpeedCurve = AnimationCurve.EaseInOut(0, 1, 1, 0);
 
-    [Header("Camera Settings")]
-    [Tooltip("The range of the horizontal axis.")]
-    [SerializeField] private Vector2 panAxisRange = new Vector2(-180, 180);
-    [Tooltip("The range of the vertical axis.")]
-    [SerializeField] private Vector2 tiltAxisRange = new Vector2(-70, 70);
-    [SerializeField] private float baseFov = 60f;
-    [SerializeField] private float runFovMultiplier = 1.3f;
-
     [Foldout("References")] 
     [SerializeField] private SOInputReader inputReader;
-    [SerializeField] private CinemachineCamera virtualCamera;
     [SerializeField] private SOAudioEvent deathSfx;
     [EndFoldout]
     
     private AudioSource _audioSource;
     private CharacterController _controller;
-    private CinemachinePanTilt _panTilt;
+    private PlayerCamera _playerCamera;
     private Vector3 _velocity;
     private Vector3 _spawnPoint;
     private float _dashTimeRemaining;
@@ -67,8 +61,8 @@ public class PlayerMovement : MonoBehaviour
     {
         _controller = GetComponent<CharacterController>();
         _audioSource = GetComponent<AudioSource>();
+        _playerCamera = GetComponent<PlayerCamera>();
         _spawnPoint = transform.position;
-        SetupCamera();
     }
     
     private void OnEnable()
@@ -95,7 +89,6 @@ public class PlayerMovement : MonoBehaviour
         HandleJump();
         HandleGravity();
         HandleDashing();
-        UpdateFov();
     }
     
     private void OnTriggerEnter(Collider other) 
@@ -152,7 +145,7 @@ public class PlayerMovement : MonoBehaviour
         if (isDashing) return;
     
         // Get the camera direction
-        Vector3 cameraForward = GetMovementDirection();
+        Vector3 cameraForward = _playerCamera.GetMovementDirection();
         Vector3 cameraRight = Quaternion.Euler(0, 90, 0) * cameraForward;
     
         // Calculate move direction relative to camera
@@ -225,12 +218,12 @@ public class PlayerMovement : MonoBehaviour
         // Use movement input if available, otherwise use forward direction
         if (_moveInput.magnitude > 0.1f)
         {
-            _dashDirection = (GetMovementDirection() * _moveInput.y + 
-                            Quaternion.Euler(0, 90, 0) * GetMovementDirection() * _moveInput.x).normalized;
+            _dashDirection = (_playerCamera.GetMovementDirection() * _moveInput.y + 
+                            Quaternion.Euler(0, 90, 0) * _playerCamera.GetMovementDirection() * _moveInput.x).normalized;
         }
         else
         {
-            _dashDirection = GetMovementDirection();
+            _dashDirection = _playerCamera.GetMovementDirection();
         }
 
         _velocity.y = 0; // Zero out vertical velocity for a clean dash
@@ -309,76 +302,6 @@ public class PlayerMovement : MonoBehaviour
 
 #endregion Movement //---------------------------------------------------------------------------------------
 
-#region Camera //---------------------------------------------------------------------------------------
 
-    private void SetupCamera()
-    {
-        if (!virtualCamera) virtualCamera = GetComponentInChildren<CinemachineCamera>();
-        if (!virtualCamera)
-        {
-            Debug.LogError("Virtual Camera not found!");
-            return;
-        }
-            
-        _panTilt = virtualCamera.GetComponent<CinemachinePanTilt>();
-        if (!_panTilt)
-        {
-            _panTilt = virtualCamera.gameObject.AddComponent<CinemachinePanTilt>();
-        }
-            
-        SetupFov();
-        SetupCameraRange();
-        SetupCursor();
-    }
 
-    private void SetupCameraRange()
-    {
-        if (!_panTilt) return;
-        
-        _panTilt.PanAxis.Range = panAxisRange;
-        _panTilt.TiltAxis.Range = tiltAxisRange;
-    }
-    
-    private void SetupCursor()
-    {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-    }
-
-    private void SetupFov()
-    {
-        if (!virtualCamera) return;
-        virtualCamera.Lens.FieldOfView = baseFov;
-    }
-    
-    private void UpdateFov()
-    {
-        if (!virtualCamera) return;
-        float targetFov = isRunning || isDashing ? baseFov * runFovMultiplier : baseFov;
-        
-        virtualCamera.Lens.FieldOfView = Mathf.Lerp(virtualCamera.Lens.FieldOfView, targetFov, Time.deltaTime * 10f);
-    }
-    
-    public Vector3 GetMovementDirection()
-    {
-        if (!_panTilt) return Vector3.zero;
-        Vector3 direction = Quaternion.Euler(0, _panTilt.PanAxis.Value, 0) * Vector3.forward;
-        return direction.normalized;
-    }
-
-    public Vector3 GetAimDirection()
-    {
-        if (!_panTilt) return Vector3.zero;
-        return Quaternion.Euler(_panTilt.TiltAxis.Value, _panTilt.PanAxis.Value, 0) * Vector3.forward;
-    }
-
-#endregion Camera //---------------------------------------------------------------------------------------
-
-#if UNITY_EDITOR
-    private void OnValidate()
-    {
-        SetupFov();
-        SetupCameraRange();
-    }
-#endif
 }

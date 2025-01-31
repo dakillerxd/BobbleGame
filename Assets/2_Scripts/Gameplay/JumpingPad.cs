@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class JumpingPad : MonoBehaviour
 {
     [Header("Jump Settings")]
@@ -7,19 +8,24 @@ public class JumpingPad : MonoBehaviour
     [SerializeField] private float horizontalForce = 0f;
     [SerializeField] private Vector3 jumpDirection = Vector3.up;
     
-    [Header("Visual Feedback")]
+    [Header("Animation")]
     [SerializeField] private bool useVisualFeedback = true;
     [SerializeField] private float feedbackDuration = 0.2f;
     [SerializeField] private Vector3 squashScale = new Vector3(1.2f, 0.8f, 1.2f);
     [SerializeField] private Vector3 stretchScale = new Vector3(0.8f, 1.2f, 0.8f);
     
-    private Vector3 originalScale;
-    private bool isAnimating = false;
-    private float animationTime = 0f;
+    [Header("References")]
+    [SerializeField] private SOAudioEvent jumpPadSfx;
+    
+    private AudioSource _audioSource;
+    private Vector3 _originalScale;
+    private bool _isAnimating = false;
+    private float _animationTime = 0f;
 
     private void Start()
     {
-        originalScale = transform.localScale;
+        _audioSource = GetComponent<AudioSource>();
+        _originalScale = transform.localScale;
         jumpDirection = jumpDirection.normalized;
     }
 
@@ -41,42 +47,43 @@ public class JumpingPad : MonoBehaviour
             // Apply the velocity directly to the player's movement script
             player.SetVelocity(launchVelocity);
 
-            if (useVisualFeedback)
-            {
-                PlayJumpPadAnimation();
-            }
+
+            jumpPadSfx.Play(_audioSource);
+            if (useVisualFeedback) PlayJumpPadAnimation();
+                
+
         }
     }
 
     private void PlayJumpPadAnimation()
     {
-        isAnimating = true;
-        animationTime = 0f;
+        _isAnimating = true;
+        _animationTime = 0f;
     }
 
     private void Update()
     {
-        if (isAnimating)
+        if (_isAnimating)
         {
-            animationTime += Time.deltaTime;
-            float progress = animationTime / feedbackDuration;
+            _animationTime += Time.deltaTime;
+            float progress = _animationTime / feedbackDuration;
 
             if (progress <= 0.5f)
             {
                 // First half of animation - squash
-                transform.localScale = Vector3.Lerp(originalScale, squashScale, progress * 2f);
+                transform.localScale = Vector3.Lerp(_originalScale, squashScale, progress * 2f);
             }
             else
             {
                 // Second half of animation - stretch and return to normal
                 float stretchProgress = (progress - 0.5f) * 2f;
-                transform.localScale = Vector3.Lerp(stretchScale, originalScale, stretchProgress);
+                transform.localScale = Vector3.Lerp(stretchScale, _originalScale, stretchProgress);
             }
 
             if (progress >= 1f)
             {
-                isAnimating = false;
-                transform.localScale = originalScale;
+                _isAnimating = false;
+                transform.localScale = _originalScale;
             }
         }
     }

@@ -9,11 +9,12 @@ using UnityEngine.UI;
 
 [RequireComponent(typeof(AudioSource))]
 [RequireComponent(typeof(PlayerMovement))]
+[RequireComponent(typeof(PlayerCamera))]
 public class PlayerGun : MonoBehaviour
 {
     [Header("Settings")] 
-    [SerializeField] private float shotForce = 15;
-    [SerializeField] private float currentBubbleScale = 0.6f;
+    [SerializeField] private float shotForce = 18;
+    [SerializeField] private float currentBubbleScale = 0.5f;
     [SerializeField] private float nextBubbleScale = 0.2f;
     [SerializeField] private float loadBubbleTime = 0.7f;
     [SerializeField] private float gunAnimationTime = 0.3f;
@@ -21,7 +22,7 @@ public class PlayerGun : MonoBehaviour
     [Header("Action Buffering")]
     [SerializeField] private float shootBufferTime = 0.1f;
     [SerializeField] private float pulseBufferTime = 0.1f;
-    [SerializeField] private float shootCooldown = 0.2f; // Minimum time between shots when holding
+    [SerializeField] private float shootCooldown = 0.3f; // Minimum time between shots when holding
     [SerializeField] private float pulseCooldown = 0.3f; // Minimum time between pulses when holding
     
     [Header("Combo")] 
@@ -52,8 +53,8 @@ public class PlayerGun : MonoBehaviour
     [SerializeField] private SOBubbleManager bubbleManager;
     [SerializeField] private SOAudioEvent gunShotSfx;
     [EndFoldout]
-
-    private PlayerMovement _playerMovement;
+    
+    private PlayerCamera _playerCamera;
     private AudioSource _audioSource;
     private BubbleAmmo _currentBubble;
     private BubbleAmmo _nextBubble;
@@ -82,7 +83,7 @@ public class PlayerGun : MonoBehaviour
 
     private void Awake()
     {
-        _playerMovement = GetComponent<PlayerMovement>();
+        _playerCamera = GetComponent<PlayerCamera>();
         _audioSource = GetComponent<AudioSource>();
         
         // Check transforms
@@ -210,7 +211,7 @@ public class PlayerGun : MonoBehaviour
         {
             BubbleBullet bubbleBullet = Instantiate(bubbleManager.BubbleBulletPrefab, bubbleSpawnPoint.position, Quaternion.identity);
             bubbleBullet.SetBubbleColor(_currentBubble.BubbleColor());
-            bubbleBullet.ShootInDirection(_playerMovement.GetAimDirection(), shotForce, this);
+            bubbleBullet.ShootInDirection(_playerCamera.GetAimDirection(), shotForce, this);
             _gunShootSequence = GunShootAnimation();
             gunShotSfx?.Play(_audioSource);
 
@@ -390,15 +391,17 @@ public class PlayerGun : MonoBehaviour
     
     private Sequence LoadBubble()
     {
+        currentBubbleTransform.localScale = new Vector3(nextBubbleScale / 3, nextBubbleScale / 3, nextBubbleScale / 3);
+        
         return Sequence.Create()
-            .Group(Tween.LocalPosition(currentBubbleTransform, startValue: _defaultNextBubbleTransformPosition, endValue: _defaultCurrentBubbleTransformPosition, duration: loadBubbleTime, Ease.OutBack))
-            .Group(Tween.Scale(currentBubbleTransform, startValue: nextBubbleScale /2, endValue: currentBubbleScale, duration: loadBubbleTime * 2, Ease.OutBack));
+            .Group(Tween.LocalPosition(currentBubbleTransform, startValue: _defaultNextBubbleTransformPosition + new Vector3(0,-0.2f,0), endValue: _defaultCurrentBubbleTransformPosition, duration: loadBubbleTime, Ease.OutBack))
+            .Group(Tween.Scale(currentBubbleTransform, startValue: nextBubbleScale /4, endValue: currentBubbleScale, duration: loadBubbleTime * 3, Ease.OutBack));
     }
     
     private Sequence LoadNextBubble()
     {
         return Sequence.Create()
-            .Group(Tween.Scale(nextBubbleTransform, startValue: 0.1f, endValue: nextBubbleScale, duration: loadBubbleTime, Ease.OutBack));
+            .Group(Tween.Scale(nextBubbleTransform, startValue: 0.1f, endValue: nextBubbleScale, duration: loadBubbleTime * 4, Ease.OutBack));
     }
 
     #endregion Animations
