@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 using VInspector;
 
+[SelectionBase]
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(AudioSource))]
 [RequireComponent(typeof(PlayerPowerUps))]

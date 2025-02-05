@@ -39,7 +39,7 @@ public class BubbleBase : MonoBehaviour
         _popSequence = Sequence.Create()
             .ChainDelay(delay)
             .Group(Tween.PunchScale(gameObject.transform, strength: new Vector3(1.2f, 1.2f, 1.2f), duration: 0.1f, frequency: 1, easeBetweenShakes: Ease.OutQuad))
-            .ChainCallback(() => { if (bubblePopSfx) bubblePopSfx.PlayUsingDummyAs(); })
+            .ChainCallback(() => { if (bubblePopSfx) bubblePopSfx.PlayAtPoint(transform.position); })
             .ChainCallback(() => Destroy(gameObject));
     }
     

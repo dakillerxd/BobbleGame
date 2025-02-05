@@ -50,7 +50,7 @@ public class SOAudioEvent : ScriptableObject
         source.Play();
     }
     
-    public void PlayUsingDummyAs()
+    public void PlayAtPoint(Vector3 position = new Vector3())
     {
         if (clips.Length == 0) // Make sure there are clips
         {
@@ -60,7 +60,8 @@ public class SOAudioEvent : ScriptableObject
             return;
         }
         
-        AudioSource source = new GameObject("DummyAudioSource").AddComponent<AudioSource>();
+        AudioSource source = new GameObject("OneShotAudioEvent").AddComponent<AudioSource>();
+        source.transform.position = position;
 
         // Set settings to audio source and play
         SetAudioSourceSettings(source);
